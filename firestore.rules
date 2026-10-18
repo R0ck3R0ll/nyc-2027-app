@@ -1,0 +1,40 @@
+rules_version = '2';
+// App del viaje a Nueva York 2027
+//  - trips/{viaje}: datos generales (nombre, familias). El id es largo y aleatorio y solo lo tiene
+//    quien ha recibido el enlace de invitación: no se pueden listar los viajes.
+//  - trips/{viaje}/blocks/{id}: bloques del programa · trips/{viaje}/members/{uid}: participantes
+// Todos entran con acceso anónimo de Firebase (sin cuentas).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function tripExists(t) { return exists(/databases/$(database)/documents/trips/$(t)); }
+
+    match /trips/{t} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && t.size() >= 20
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.fam is map;
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nombre', 'fam'])
+        && request.resource.data.fam is map;
+      allow delete: if false;
+
+      match /blocks/{id} {
+        allow read: if signedIn() && tripExists(t);
+        allow create, update: if signedIn() && tripExists(t)
+          && id.size() <= 40
+          && request.resource.data.day is int && request.resource.data.day >= 1 && request.resource.data.day <= 7
+          && request.resource.data.start is string && request.resource.data.start.size() <= 5
+          && request.resource.data.who in ['all', 'A', 'B']
+          && request.resource.data.keys().hasOnly(['id', 'day', 'start', 'dur', 'who', 'type', 'n', 'title', 'note', 'status', 'fixed', 'place', 'booking', 'by', 'at']);
+        allow delete: if signedIn() && tripExists(t);
+      }
+      match /members/{uid} {
+        allow read: if signedIn() && tripExists(t);
+        allow write: if signedIn() && request.auth.uid == uid && tripExists(t)
+          && request.resource.data.keys().hasOnly(['name', 'fam', 'at']);
+      }
+    }
+  }
+}
