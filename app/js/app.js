@@ -104,6 +104,7 @@
   });
 
   /* ---------- bienvenida / perfil ---------- */
+  var welcomeFam = null;
   function renderWelcome() {
     var cloud = window.FIREBASE_CONFIG;
     var st = S.sync.status;
@@ -146,9 +147,10 @@
       if (!window.SYNC_API || !window.SYNC_API.enabled()) { toast('La sincronización aún no está activada'); return; }
       window.SYNC_API.join(m[1]);
     };
-    var sel = me && me.fam;
+    var sel = welcomeFam || (me && me.fam);
     document.querySelectorAll('[data-fam]').forEach(function (b) {
-      b.onclick = function () { sel = b.getAttribute('data-fam'); document.querySelectorAll('[data-fam]').forEach(function (x) { x.classList.toggle('on', x === b); }); };
+      if (b.getAttribute('data-fam') === sel) b.classList.add('on');
+      b.onclick = function () { sel = welcomeFam = b.getAttribute('data-fam'); document.querySelectorAll('[data-fam]').forEach(function (x) { x.classList.toggle('on', x === b); }); };
     });
     var en = $('#entrar');
     if (en) en.onclick = function () {
@@ -693,7 +695,16 @@
   function render() {
     var y = window.scrollY;
     var sameView = render._last === S.ui.view + '|' + curDay();
-    if (!S.trip || !S.me) { $('#tabs').classList.add('hidden'); renderWelcome(); return; }
+    if (!S.trip || !S.me) {
+      // conservar lo escrito si la pantalla se redibuja (p. ej. al conectar)
+      var keep = {};
+      document.querySelectorAll('#app input[id]').forEach(function (i) { keep[i.id] = i.value; });
+      var foc = document.activeElement && document.activeElement.id;
+      $('#tabs').classList.add('hidden'); renderWelcome();
+      Object.keys(keep).forEach(function (k) { var i = document.getElementById(k); if (i && keep[k]) i.value = keep[k]; });
+      if (foc && document.getElementById(foc)) document.getElementById(foc).focus();
+      return;
+    }
     $('#tabs').classList.remove('hidden');
     renderTabs();
     ({ programa: renderPrograma, sugerencias: renderSug, banco: renderBanco, ahora: renderAhora, viaje: renderViaje }[S.ui.view] || renderPrograma)();

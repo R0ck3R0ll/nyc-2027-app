@@ -4,10 +4,10 @@
           trips/{viaje}/members/{uid} { name, fam }
    El id del viaje es largo y aleatorio: solo entra quien tiene el enlace de invitación. */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import { getAuth, signInAnonymously, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch, serverTimestamp
+  doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch, serverTimestamp, connectFirestoreEmulator
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 const ST = window.STORE;
@@ -33,7 +33,8 @@ const API = {
     let blocks = ST.blocks();
     if (!blocks.length) blocks = window.CORE.TRIP.fijos.map(b => Object.assign({ status: 'plan' }, b));
     blocks.forEach(b => batch.set(doc(db, 'trips', id, 'blocks', b.id), clean(b)));
-    await batch.commit();
+    // Sin esperar a la confirmación del servidor: sin conexión se guarda en el móvil y se sube después
+    batch.commit().catch(err);
     connect(id);
     return id;
   },
@@ -72,7 +73,7 @@ function connect(id) {
     const blocks = {};
     qs.forEach(s => { blocks[s.id] = Object.assign({}, s.data(), { id: s.id }); });
     ST.applyRemote({ blocks });
-    set({ pending: qs.metadata.hasPendingWrites, status: qs.metadata.fromCache ? 'offline' : 'online' });
+    if (gotTrip) set({ pending: qs.metadata.hasPendingWrites, status: qs.metadata.fromCache ? 'offline' : 'online' });
   }, err));
   unsubs.push(onSnapshot(collection(db, 'trips', id, 'members'), qs => {
     const members = {};
@@ -88,6 +89,11 @@ if (!CFG) {
   const app = initializeApp(CFG);
   db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
   const auth = getAuth(app);
+  if (window.FIREBASE_EMULATOR) {   // solo para pruebas locales
+    const host = typeof window.FIREBASE_EMULATOR === 'string' ? window.FIREBASE_EMULATOR : 'localhost';
+    connectFirestoreEmulator(db, host, 8080);
+    connectAuthEmulator(auth, 'http://' + host + ':9099', { disableWarnings: true });
+  }
   authReady = new Promise(resolve => {
     onAuthStateChanged(auth, u => {
       if (u) { user = u; resolve(u); }
