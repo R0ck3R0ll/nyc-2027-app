@@ -20,7 +20,7 @@ jobs:
       - name: Publicar app y reglas
         env:
           SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          PROJECT: ${{ vars.FIREBASE_PROJECT || 'nyc-2027' }}
+          PROJECT: nyc-2027-fe4af
         run: |
           printf '%s' "$SA_KEY" > "$RUNNER_TEMP/sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
