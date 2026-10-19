@@ -94,7 +94,7 @@
     var un = S.me ? ST.unseen().length : 0;
     return '<header class="band"><div class="row"><div><h1>' + esc(title) + '</h1>' + (sub ? '<div class="sub">' + sub + '</div>' : '') +
       '</div><div class="row" style="gap:14px">' + (S.me ? '<button class="bell" id="bell" aria-label="Cambios">' + I.bell + (un ? '<b>' + un + '</b>' : '') + '</button>' : '') +
-      '<span title="' + esc(stTxt) + '" class="sync-dot ' + st + '"></span></div></div></header><div class="band-line"></div>';
+      '<span title="' + esc(stTxt) + '" class="sync-dot ' + st + '"></span></div></div></header>';
   }
   function renderTabs() {
     $('#tabs').innerHTML = TABS.map(function (t) {
