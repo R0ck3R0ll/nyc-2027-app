@@ -589,8 +589,22 @@
   }
 
   /* añadir una ficha a un día */
-  function addPlace(n, presetDay) {
+  function addPlace(n, presetDay, confirmed) {
     var f = C.ficha(n);
+    var ya = ST.blocks().filter(function (b) { return b.n === n && b.status !== 'skip'; })
+      .sort(function (x, y) { return x.day - y.day || C.blockStart(x) - C.blockStart(y); });
+    if (ya.length && !confirmed) {
+      var lines = ya.map(function (b) {
+        return 'Ya programado el ' + DIAS[b.day - 1].corto + ' a las ' + esc(b.start) + (b.status === 'done' ? ' (hecho)' : '') +
+          (b.who === 'all' ? '' : b.who === myFam() ? ' · mi familia' : ' · otra familia');
+      });
+      openSheet('¿Programarlo otra vez?', '<p style="margin:0 0 6px"><b>' + esc(f.nombre) + '</b></p>' + lines.map(function (l) { return '<div class="warn w-warn">' + l + '</div>'; }).join('') +
+        '<div class="actionbar"><button class="btn ghost" id="ya-no">Cancelar</button><button class="btn yellow" id="ya-si">Programar igualmente</button></div>', function (el) {
+        $('#ya-no', el).onclick = function () { closeSheet(); };
+        $('#ya-si', el).onclick = function () { closeSheet(); setTimeout(function () { addPlace(n, presetDay, true); }, 30); };
+      });
+      return;
+    }
     var fam = myFam();
     var day = presetDay || (S.ui.view === 'programa' ? curDay() : null) || curDay();
     var start = null, nogap = false;
@@ -695,6 +709,8 @@
       b.onclick = function () {
         var n = +b.dataset.now;
         var nb = { day: day, n: n, start: b.dataset.s, dur: C.ficha(n).plan.dur, status: 'plan', type: 'place' };
+        var ya = ST.blocks().filter(function (x) { return x.n === n && x.status !== 'skip'; });
+        if (ya.length && !confirm('Ya programado el ' + DIAS[ya[0].day - 1].corto + ' a las ' + ya[0].start + '. ¿Añadirlo también ahora?')) return;
         askScope('«' + C.ficha(n).nombre + '» a las ' + b.dataset.s, function (sc) { ST.addBlocks([nb], whoFor(sc)); toast('Añadido a las ' + b.dataset.s); });
       };
     });
