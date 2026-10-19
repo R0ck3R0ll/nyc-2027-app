@@ -558,8 +558,34 @@
       }).join('') + '</div></div>';
     }
     h += '<p class="small muted" style="margin-top:16px">Ficha ' + f.num + ' de 79</p>';
-    h += '<div class="actionbar"><button class="btn yellow" data-add="' + n + '">' + I.plus + ' Añadir al programa</button></div>';
-    openSheet('', h);
+    var own = C.sortBlocks(ST.blocks().filter(function (b) { return b.n === n && b.status !== 'skip' && ST.canEdit(b); }))
+      .sort(function (x, y) { return x.day - y.day || C.blockStart(x) - C.blockStart(y); });
+    if (own.length) h += '<div class="actionbar"><button class="btn ghost" id="fi-del" style="color:var(--err)">Quitar del programa</button><button class="btn yellow" id="fi-mod">Modificar programación</button></div>';
+    else h += '<div class="actionbar"><button class="btn yellow" data-add="' + n + '">' + I.plus + ' Añadir al programa</button></div>';
+    openSheet('', h, function (el) {
+      if (!own.length) return;
+      // si está programado más de una vez, se elige cuál
+      function pick(title, cb) {
+        if (own.length === 1) { cb(own[0]); return; }
+        openSheet(title, '<div class="list">' + own.map(function (b) {
+          return '<button class="btn ghost full" data-pick="' + b.id + '">' + DIAS[b.day - 1].corto + ' · ' + esc(b.start) + (b.who !== 'all' ? ' · ' + esc(ST.famName(b.who)) : '') + '</button>';
+        }).join('') + '</div>', function (el2) {
+          el2.querySelectorAll('[data-pick]').forEach(function (bt) { bt.onclick = function () { var b = S.blocks[bt.getAttribute('data-pick')]; closeSheet(); setTimeout(function () { cb(b); }, 30); }; });
+        });
+      }
+      $('#fi-mod', el).onclick = function () {
+        pick('¿Qué programación?', function (b) { closeSheet(); setTimeout(function () { editBlock(b.id); }, 30); });
+      };
+      $('#fi-del', el).onclick = function () {
+        pick('¿Cuál quitas?', function (b) {
+          closeSheet();
+          setTimeout(function () {
+            if (b.who === 'all') askScope('¿Quitarlo para todo el grupo o solo para tu familia?', function (sc) { ST.removeBlock(b, sc); toast('Quitado del programa'); });
+            else { ST.removeBlock(b, 'all'); toast('Quitado del programa'); }
+          }, 30);
+        });
+      };
+    });
   }
 
   /* añadir una ficha a un día */
