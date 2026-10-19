@@ -1,25 +1,24 @@
 rules_version = '2';
 // App del viaje a Nueva York 2027
-//  - trips/{viaje}: datos generales (nombre, familias). El id es largo y aleatorio y solo lo tiene
-//    quien ha recibido el enlace de invitación: no se pueden listar los viajes.
-//  - trips/{viaje}/blocks/{id}: bloques del programa · trips/{viaje}/members/{uid}: participantes
+//  - trips/{viaje}: el id es largo y aleatorio y solo lo tiene quien ha recibido el enlace de invitación;
+//    no se pueden listar los viajes.
+//  - blocks: programa · claims: quién ha entrado con cada nombre (uno por nombre) · notifs: avisos de cambios
 // Todos entran con acceso anónimo de Firebase (sin cuentas).
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function tripExists(t) { return exists(/databases/$(database)/documents/trips/$(t)); }
     // En una escritura por lotes (crear el viaje con sus bloques) el viaje existe «después» del lote
     function tripAfter(t) { return existsAfter(/databases/$(database)/documents/trips/$(t)); }
+    function isOrganizer(t) {
+      return exists(/databases/$(database)/documents/trips/$(t)/claims/carlo)
+        && get(/databases/$(database)/documents/trips/$(t)/claims/carlo).data.uid == request.auth.uid;
+    }
 
     match /trips/{t} {
       allow get: if signedIn();
       allow list: if false;
-      allow create: if signedIn() && t.size() >= 20
-        && request.resource.data.createdBy == request.auth.uid
-        && request.resource.data.fam is map;
-      allow update: if signedIn()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nombre', 'fam'])
-        && request.resource.data.fam is map;
+      allow create: if signedIn() && t.size() >= 20 && request.resource.data.createdBy == request.auth.uid;
+      allow update: if signedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nombre']);
       allow delete: if false;
 
       match /blocks/{id} {
@@ -30,12 +29,27 @@ service cloud.firestore {
           && request.resource.data.start is string && request.resource.data.start.size() <= 5
           && request.resource.data.who in ['all', 'A', 'B']
           && request.resource.data.keys().hasOnly(['id', 'day', 'start', 'dur', 'who', 'type', 'n', 'title', 'note', 'status', 'fixed', 'place', 'booking', 'by', 'at']);
-        allow delete: if signedIn() && tripExists(t);
+        allow delete: if signedIn() && tripAfter(t);
       }
-      match /members/{uid} {
+      // Un nombre de la lista solo puede estar en un móvil. Se reserva si está libre (o liberado);
+      // solo el organizador (Carlo) puede liberarlo poniendo uid a null.
+      match /claims/{key} {
         allow read: if signedIn();
-        allow write: if signedIn() && request.auth.uid == uid && tripAfter(t)
-          && request.resource.data.keys().hasOnly(['name', 'fam', 'at']);
+        allow create: if signedIn() && tripAfter(t) && key.size() <= 20
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['uid', 'name', 'at']);
+        allow update: if signedIn() && request.resource.data.keys().hasOnly(['uid', 'name', 'at'])
+          && ((resource.data.uid == null && request.resource.data.uid == request.auth.uid)
+              || (request.resource.data.uid == null && isOrganizer(t)));
+        allow delete: if false;
+      }
+      match /notifs/{id} {
+        allow read: if signedIn();
+        allow create: if signedIn() && tripAfter(t) && id.size() <= 40
+          && request.resource.data.keys().hasOnly(['id', 'at', 'by', 'byFam', 'who', 'txt', 'day', 'blockId'])
+          && request.resource.data.txt is string && request.resource.data.txt.size() <= 500
+          && request.resource.data.who in ['all', 'A', 'B'];
+        allow update, delete: if false;
       }
     }
   }

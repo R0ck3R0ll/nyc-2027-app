@@ -38,6 +38,7 @@
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>',
     doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg>',
     route: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
     share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>'
   };
   function modeIcon(m) { return m === 'metro' ? I.train : m === 'bus' ? I.bus : I.walk; }
@@ -49,7 +50,7 @@
     clearTimeout(toastT); toastT = setTimeout(function () { t.classList.add('hidden'); }, 2600);
   }
   function myFam() { return S.me ? S.me.fam : 'A'; }
-  function whoChip(who) { return who && who !== 'all' ? '<span class="who ' + who + '">' + esc(ST.famName(who)) + '</span>' : ''; }
+  function whoChip(who) { return who && who !== 'all' ? '<span class="who ' + (who === myFam() ? 'A' : 'B') + '">' + esc(ST.famName(who)) + '</span>' : ''; }
   function todayDay() { var n = C.nyNow(); return n.dia; }
   function curDay() {
     if (S.ui.day) return S.ui.day;
@@ -90,8 +91,10 @@
   function header(title, sub) {
     var st = S.sync.status;
     var stTxt = { online: 'Sincronizado', offline: 'Sin conexión: se guardará al volver', connecting: 'Conectando…', off: 'Solo en este móvil', notrip: 'Sin viaje en la nube', notfound: 'Viaje no encontrado', error: 'Error de sincronización' }[st] || '';
+    var un = S.me ? ST.unseen().length : 0;
     return '<header class="band"><div class="row"><div><h1>' + esc(title) + '</h1>' + (sub ? '<div class="sub">' + sub + '</div>' : '') +
-      '</div><span title="' + esc(stTxt) + '" class="sync-dot ' + st + '"></span></div></header><div class="band-line"></div>';
+      '</div><div class="row" style="gap:14px">' + (S.me ? '<button class="bell" id="bell" aria-label="Cambios">' + I.bell + (un ? '<b>' + un + '</b>' : '') + '</button>' : '') +
+      '<span title="' + esc(stTxt) + '" class="sync-dot ' + st + '"></span></div></div></header><div class="band-line"></div>';
   }
   function renderTabs() {
     $('#tabs').innerHTML = TABS.map(function (t) {
@@ -101,63 +104,96 @@
   document.addEventListener('click', function (ev) {
     var t = ev.target.closest('[data-tab]');
     if (t) { ST.setUi({ view: t.getAttribute('data-tab') }); window.scrollTo(0, 0); }
+    if (ev.target.closest('#bell')) openNotifs();
   });
 
-  /* ---------- bienvenida / perfil ---------- */
-  var welcomeFam = null;
+  /* ---------- bienvenida: solo el nombre ---------- */
+  var busy = false, welcomeMsg = '';
   function renderWelcome() {
-    var cloud = window.FIREBASE_CONFIG;
     var st = S.sync.status;
+    var hasLink = !!S.tripId || !!new URLSearchParams(location.search).get('v');
     var html = header('Nueva York 2027', '1–7 de enero');
-    html += '<div class="welcome">';
-    if (!S.trip) {
-      if (cloud && (st === 'connecting')) {
-        html += '<div class="empty"><div class="big">Conectando…</div>Cargando el viaje</div>';
-      } else {
-        html += '<h2>Bienvenidos</h2><p class="muted">Si alguien del grupo te ha mandado el enlace del viaje, ábrelo desde ese mensaje. Si eres quien organiza, crea el viaje e invita a los demás.</p>' +
-          (st === 'notfound' ? '<p class="warn w-error">El enlace no corresponde a ningún viaje. Pide de nuevo la invitación.</p>' : '') +
-          '<label class="f">Nombre de la familia A</label><input type="text" id="famA" placeholder="p. ej. Nasisi" value="">' +
-          '<label class="f">Nombre de la familia B</label><input type="text" id="famB" placeholder="la otra familia" value="">' +
-          '<div style="height:14px"></div><button class="btn yellow full" id="crear">Crear el viaje</button>' +
-          '<label class="f" style="margin-top:22px">¿Tienes un enlace de invitación? Pégalo aquí</label><input type="text" id="link" placeholder="https://…?v=…">' +
-          '<div style="height:8px"></div><button class="btn ghost full" id="unirse">Entrar con el enlace</button>';
-      }
-    } else {
-      var me = S.me || {};
-      html += '<h2>¿Quién eres?</h2><p class="muted">Tu nombre y tu familia: así la app sabe qué es para todos y qué es solo para tu familia.</p>' +
-        '<label class="f">Tu nombre</label><input type="text" id="nombre" value="' + esc(me.name || '') + '" placeholder="Nombre">' +
-        '<label class="f">Tu familia</label><div class="famopts">' +
-        ['A', 'B'].map(function (f) { return '<button data-fam="' + f + '" class="' + (me.fam === f ? 'on' : '') + '">' + esc(ST.famName(f)) + '</button>'; }).join('') +
-        '</div><div style="height:18px"></div><button class="btn yellow full" id="entrar">Entrar</button>';
-    }
-    html += '</div>';
+    html += '<div class="welcome"><h2>Hola</h2><p class="muted">Escribe tu nombre para entrar.</p>' +
+      '<label class="f">Tu nombre</label><input type="text" id="nombre" autocomplete="given-name" autocapitalize="words" placeholder="Nombre">' +
+      '<div style="height:16px"></div><button class="btn yellow full" id="entrar"' + (busy ? ' disabled' : '') + '>' + (busy ? 'Entrando…' : 'Entrar') + '</button>' +
+      (welcomeMsg ? '<p class="warn w-error" style="margin-top:14px">' + esc(welcomeMsg) + '</p>' : '') +
+      (st === 'notfound' ? '<p class="warn w-error" style="margin-top:14px">El enlace no corresponde a ningún viaje. Pide de nuevo la invitación a Carlo.</p>' : '') +
+      (!hasLink && st !== 'connecting' ? '<p class="small muted" style="margin-top:18px">Para entrar, abre el enlace del viaje que ha mandado Carlo.</p>' : '') +
+      '</div>';
     $('#app').innerHTML = html;
-    var crear = $('#crear');
-    if (crear) crear.onclick = function () {
-      var fam = { A: $('#famA').value.trim() || 'Familia A', B: $('#famB').value.trim() || 'Familia B' };
-      if (window.SYNC_API && window.SYNC_API.enabled()) {
-        crear.disabled = true; crear.textContent = 'Creando…';
-        window.SYNC_API.create(fam).catch(function (e) { crear.disabled = false; crear.textContent = 'Crear el viaje'; toast('No se pudo crear: ' + (e.code || e.message)); });
-      } else ST.createLocal(fam);
+    var inp = $('#nombre');
+    inp.onkeydown = function (e) { if (e.key === 'Enter') $('#entrar').click(); };
+    $('#entrar').onclick = function () {
+      var p = C.persona(inp.value);
+      welcomeMsg = '';
+      if (!p) { welcomeMsg = 'Ese nombre no está en la lista del viaje.'; render(); return; }
+      var api = window.SYNC_API;
+      if (!api || !api.enabled()) { welcomeMsg = 'La app no ha terminado de cargar. Inténtalo de nuevo.'; render(); return; }
+      busy = true; render();
+      var started = new Promise(function (res, rej) {
+        if (api.started) api.started.then(res);
+        setTimeout(function () { rej({ msg: 'Hace falta conexión a internet para entrar la primera vez.' }); }, 10000);
+      });
+      started.then(function () {
+        return api.tripId() ? null : (p.org ? api.create() : Promise.reject({ msg: 'Abre el enlace del viaje que ha mandado Carlo.' }));
+      }).then(function () { return api.claim(p.nombre); }).then(function (r) {
+        busy = false;
+        if (r === 'ok') { welcomeMsg = ''; ST.setMe({ name: p.nombre, fam: p.fam }); askNotifPermission(); return; }
+        welcomeMsg = r === 'taken' ? p.nombre + ' ya ha entrado desde otro móvil. Si es un error, pide a Carlo que libere tu nombre.'
+          : r === 'offline' ? 'Hace falta conexión a internet para entrar la primera vez.'
+          : 'Abre el enlace del viaje que ha mandado Carlo.';
+        render();
+      }).catch(function (e) { busy = false; welcomeMsg = e && e.msg ? e.msg : 'No se ha podido entrar: ' + (e && (e.code || e.message) || e); render(); });
     };
-    var un = $('#unirse');
-    if (un) un.onclick = function () {
-      var m = /[?&]v=([\w-]+)/.exec($('#link').value);
-      if (!m) { toast('El enlace no es válido'); return; }
-      if (!window.SYNC_API || !window.SYNC_API.enabled()) { toast('La sincronización aún no está activada'); return; }
-      window.SYNC_API.join(m[1]);
-    };
-    var sel = welcomeFam || (me && me.fam);
-    document.querySelectorAll('[data-fam]').forEach(function (b) {
-      if (b.getAttribute('data-fam') === sel) b.classList.add('on');
-      b.onclick = function () { sel = welcomeFam = b.getAttribute('data-fam'); document.querySelectorAll('[data-fam]').forEach(function (x) { x.classList.toggle('on', x === b); }); };
+  }
+
+  /* ---------- preguntar a quién afecta un cambio ---------- */
+  function askScope(title, onPick, opts) {
+    opts = opts || {};
+    var html = '<p style="margin:0 0 14px">' + esc(title) + '</p>' +
+      '<div style="display:grid;gap:10px">' +
+      '<button class="btn yellow full" data-scope="all">Para todo el grupo</button>' +
+      '<button class="btn ghost full" data-scope="mine">Solo para mi familia</button></div>' +
+      '<p class="small muted" style="margin:12px 0 0">Se avisará a quienes les afecta el cambio.</p>';
+    openSheet(opts.titulo || '¿Para quién?', html, function (el) {
+      el.querySelectorAll('[data-scope]').forEach(function (b) {
+        b.onclick = function () { var sc = b.getAttribute('data-scope'); closeSheet(); setTimeout(function () { onPick(sc); }, 30); };
+      });
     });
-    var en = $('#entrar');
-    if (en) en.onclick = function () {
-      var name = $('#nombre').value.trim();
-      if (!name || !sel) { toast('Escribe tu nombre y elige tu familia'); return; }
-      ST.setMe({ name: name, fam: sel });
-    };
+  }
+  function whoFor(scope) { return scope === 'mine' ? myFam() : 'all'; }
+
+  /* ---------- avisos ---------- */
+  function askNotifPermission() {
+    try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+  }
+  window.onNewNotifs = function (list) {
+    if (!S.me) return;
+    var mine = list.filter(function (n) { return n.by !== S.me.name && C.covers(n.who, S.me.fam); });
+    if (!mine.length) return;
+    if (document.visibilityState === 'visible') toast(mine[0].by + ' ' + mine[0].txt);
+    try {
+      if ('Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) {
+        navigator.serviceWorker.ready.then(function (reg) {
+          mine.slice(0, 3).forEach(function (n) {
+            reg.showNotification('NYC 2027 · ' + n.by, { body: n.by + ' ' + n.txt, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: n.id, data: { day: n.day } });
+          });
+        });
+      }
+    } catch (e) {}
+  };
+  function openNotifs() {
+    var list = ST.mine();
+    var seen = S.ui.seenAt || 0;
+    var html = list.length ? '<div class="list">' + list.slice(0, 60).map(function (n) {
+      var d = new Date(n.at);
+      var when = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      return '<div class="card pad small" style="' + (n.at > seen && n.by !== S.me.name ? 'border-left:4px solid var(--accent)' : '') + '"' + (n.day ? ' data-nday="' + n.day + '"' : '') + '><b>' + esc(n.by === S.me.name ? 'Tú' : n.by) + '</b> ' + esc(n.by === S.me.name ? n.txt.replace(/^ha /, 'has ') : n.txt) + '<div class="muted" style="margin-top:3px">' + when + '</div></div>';
+    }).join('') + '</div>' : '<div class="empty">Sin cambios todavía.</div>';
+    ST.setUi({ seenAt: Date.now() });
+    openSheet('Cambios en el programa', html, function (el) {
+      el.querySelectorAll('[data-nday]').forEach(function (c) { c.onclick = function () { var d = +c.getAttribute('data-nday'); closeSheet(); ST.setUi({ view: 'programa', day: d }); }; });
+    });
   }
 
   /* ---------- PROGRAMA ---------- */
@@ -187,7 +223,7 @@
     var anO = S.ui.showOther ? C.analyzeDay(ST.blocks(), day, other) : null;
     var list = visibleBlocks(day);
     var r = an.resumen;
-    var html = header('Programa', esc(S.me.name) + ' · ' + esc(ST.famName(fam)));
+    var html = header('Programa', esc(S.me.name));
     html += '<main>' + dayChips(day, 'data-day');
     html += '<div class="dayhead"><div><h2>' + d.largo + '</h2><div class="meta">' +
       (r.first != null ? C.fmt(r.first) + '–' + C.fmt(r.last) + ' · ' + C.durTxt(r.activo) + ' de actividad · ' + C.durTxt(r.traslados) + ' de traslados' : 'Día vacío') +
@@ -197,7 +233,7 @@
       var col = r.nivel === 'ligero' ? 'var(--ok)' : r.nivel === 'completo' ? 'var(--accent)' : 'var(--err)';
       html += '<div class="loadbar"><i style="width:' + pct + '%;background:' + col + '"></i></div><div class="small muted">Carga del día: ' + { ligero: 'ligera', completo: 'completa', cargado: 'muy cargada' }[r.nivel] + '</div>';
     }
-    html += '<label class="toggle"><input type="checkbox" id="showOther" ' + (S.ui.showOther ? 'checked' : '') + '> Ver también lo de ' + esc(ST.famName(other)) + '</label>';
+    html += '<label class="toggle"><input type="checkbox" id="showOther" ' + (S.ui.showOther ? 'checked' : '') + '> Ver también los planes de la otra familia</label>';
     if (!list.length || list.every(function (b) { return b.type === 'fixed'; })) {
       html += '<div class="card empty"><div class="big">' + (list.length ? 'Solo hay lo fijo' : 'Día vacío') + '</div>Elige una sugerencia o añade lugares desde el banco.<div class="row-btns" style="margin-top:14px"><button class="btn yellow" data-go="sug">' + I.spark + ' Sugerencias</button><button class="btn ghost" data-go="banco">' + I.plus + ' Añadir lugar</button></div></div>';
     }
@@ -248,7 +284,7 @@
     html += '</div><div class="acts">';
     if (f) html += '<a class="btn maps small" target="_blank" rel="noopener" href="' + C.mapsDir(f) + '" data-stop>' + I.nav + ' Ir</a>';
     if (f) html += '<button class="btn ghost small" data-ficha="' + f.num + '" data-stop>' + I.doc + ' Ficha</button>';
-    if (b.type !== 'fixed') html += '<button class="btn ghost small" data-done="' + b.id + '" data-stop>' + (b.status === 'done' ? 'Deshacer' : I.check + ' Hecho') + '</button>';
+    if (b.type !== 'fixed' && ST.canEdit(b)) html += '<button class="btn ghost small" data-done="' + b.id + '" data-stop>' + (b.status === 'done' ? 'Deshacer' : I.check + ' Hecho') + '</button>';
     html += '</div></div></div>';
     return html;
   }
@@ -257,6 +293,13 @@
   function editBlock(id) {
     var b = S.blocks[id];
     if (!b) return;
+    if (!ST.canEdit(b)) {
+      var fo = b.n != null ? C.ficha(b.n) : null;
+      openSheet('Plan de la otra familia', '<div class="fttl" style="font-size:21px">' + esc(C.blockTitle(b)) + '</div><p>' + DIAS[b.day - 1].largo + ', de ' + C.fmt(C.blockStart(b)) + ' a ' + C.fmt(C.blockEnd(b)) + '</p>' +
+        (b.note ? '<p class="muted">' + esc(b.note) + '</p>' : '') + '<p class="small muted">Solo lo puede cambiar la otra familia.</p>' +
+        (fo ? '<div class="actionbar"><button class="btn ghost" data-ficha="' + fo.num + '">' + I.doc + ' Ver ficha</button></div>' : ''));
+      return;
+    }
     var f = b.n != null ? C.ficha(b.n) : null;
     var html = '';
     if (f) html += '<div class="kicker">' + bullet(f) + esc(f.categoria) + ' · ' + esc(f.zona) + '</div>';
@@ -267,7 +310,8 @@
       '<label class="f">Duración (min)</label><input type="number" id="eb-dur" min="5" step="5" value="' + C.blockDur(b) + '">';
     if (f && f.plan.fun) html += '<div class="small muted" style="margin-top:4px">' + esc(C.hoursTxt(f, b.day)) + '</div>';
     else if (f) html += '<div class="small muted" style="margin-top:4px">Horario ese día: ' + esc(C.hoursTxt(f, b.day)) + '</div>';
-    html += '<label class="f">Para quién</label><div class="seg" id="eb-who">' + ['all', 'A', 'B'].map(function (w) { return '<button data-w="' + w + '" class="' + (b.who === w ? 'on' : '') + '">' + esc(ST.famName(w)) + '</button>'; }).join('') + '</div>';
+    html += '<p class="small muted" style="margin:10px 0 0">' + (b.who === 'all' ? 'Plan de todo el grupo' : 'Plan solo de tu familia') + (b.by ? ' · último cambio: ' + esc(b.by) : '') + '</p>';
+    if (b.who !== 'all') html += '<label class="toggle"><input type="checkbox" id="eb-share"> Pasarlo a todo el grupo</label>';
     if (b.type !== 'fixed') html += '<label class="f">Estado</label><div class="seg" id="eb-st">' + [['plan', 'Pendiente'], ['done', 'Hecho']].map(function (x) { return '<button data-s="' + x[0] + '" class="' + ((b.status || 'plan') === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>';
     if (f && f.reserva && f.reserva.tipo !== 'no' || (b.booking && b.booking.ok)) {
       var bk = b.booking || {};
@@ -277,37 +321,38 @@
     html += '<label class="f">Nota</label><textarea id="eb-note" placeholder="Opcional">' + esc(b.note || '') + '</textarea>';
     html += '<div class="actionbar"><button class="btn ghost" id="eb-del" style="color:var(--err)">Quitar del programa</button><button class="btn yellow" id="eb-save">Guardar</button></div>';
     openSheet(f ? 'Bloque del programa' : 'Bloque', html, function (el) {
-      var who = b.who || 'all', st = b.status || 'plan';
-      el.querySelectorAll('#eb-who button').forEach(function (x) { x.onclick = function () { who = x.dataset.w; el.querySelectorAll('#eb-who button').forEach(function (y) { y.classList.toggle('on', y === x); }); }; });
+      var st = b.status || 'plan';
       el.querySelectorAll('#eb-st button').forEach(function (x) { x.onclick = function () { st = x.dataset.s; el.querySelectorAll('#eb-st button').forEach(function (y) { y.classList.toggle('on', y === x); }); }; });
       $('#eb-save', el).onclick = function () {
         var nb = Object.assign({}, b, {
           day: +$('#eb-day', el).value, start: $('#eb-start', el).value || b.start,
-          dur: Math.max(5, +$('#eb-dur', el).value || C.blockDur(b)), who: who, status: st,
+          dur: Math.max(5, +$('#eb-dur', el).value || C.blockDur(b)), status: st,
           note: $('#eb-note', el).value.trim()
         });
         if ($('#eb-title', el)) nb.title = $('#eb-title', el).value.trim() || 'Bloque';
         if ($('#eb-ok', el)) nb.booking = { ok: $('#eb-ok', el).checked, info: $('#eb-info', el).value.trim() };
-        ST.putBlock(nb); closeSheet(); toast('Guardado');
+        if ($('#eb-share', el) && $('#eb-share', el).checked) nb.who = 'all';
+        closeSheet();
+        if (b.who === 'all') setTimeout(function () { askScope('¿Este cambio es para todo el grupo o solo para tu familia?', function (sc) { ST.updateBlock(b, nb, sc); toast('Guardado'); }); }, 30);
+        else { ST.updateBlock(b, nb, 'all'); toast('Guardado'); }
       };
       $('#eb-del', el).onclick = function () {
-        if (b.type === 'fixed' && !confirm('¿Quitar este bloque fijo?')) return;
-        ST.delBlock(b.id); closeSheet(); toast('Quitado del programa');
+        closeSheet();
+        if (b.who === 'all') setTimeout(function () { askScope('¿Quitarlo para todo el grupo o solo para tu familia?', function (sc) { ST.removeBlock(b, sc); toast('Quitado del programa'); }); }, 30);
+        else { ST.removeBlock(b, 'all'); toast('Quitado del programa'); }
       };
     });
   }
   function newFreeBlock(day) {
     var html = '<label class="f">Qué</label><input type="text" id="nb-t" placeholder="Descanso, compras, cena…">' +
       '<div class="filters"><div><label class="f">Hora</label><input type="time" id="nb-s" value="17:00"></div><div><label class="f">Duración (min)</label><input type="number" id="nb-d" value="60" step="5"></div></div>' +
-      '<label class="f">Para quién</label><div class="seg" id="nb-w">' + ['all', 'A', 'B'].map(function (w) { return '<button data-w="' + w + '" class="' + (w === 'all' ? 'on' : '') + '">' + esc(ST.famName(w)) + '</button>'; }).join('') + '</div>' +
       '<label class="toggle"><input type="checkbox" id="nb-h"> Es en el hotel</label>' +
       '<div class="actionbar"><button class="btn yellow" id="nb-ok">Añadir al ' + DIAS[day - 1].corto + '</button></div>';
     openSheet('Bloque libre', html, function (el) {
-      var who = 'all';
-      el.querySelectorAll('#nb-w button').forEach(function (x) { x.onclick = function () { who = x.dataset.w; el.querySelectorAll('#nb-w button').forEach(function (y) { y.classList.toggle('on', y === x); }); }; });
       $('#nb-ok', el).onclick = function () {
-        ST.putBlock({ day: day, start: $('#nb-s', el).value || '17:00', dur: +$('#nb-d', el).value || 60, type: 'free', title: $('#nb-t', el).value.trim() || 'Bloque libre', who: who, status: 'plan', place: $('#nb-h', el).checked ? 'hotel' : null });
-        closeSheet(); toast('Añadido');
+        var nb = { day: day, start: $('#nb-s', el).value || '17:00', dur: +$('#nb-d', el).value || 60, type: 'free', title: $('#nb-t', el).value.trim() || 'Bloque libre', status: 'plan', place: $('#nb-h', el).checked ? 'hotel' : null };
+        closeSheet();
+        setTimeout(function () { askScope('«' + nb.title + '» el ' + DIAS[day - 1].corto + ' a las ' + nb.start, function (sc) { ST.addBlocks([nb], whoFor(sc)); toast('Añadido'); }); }, 30);
       };
     });
   }
@@ -315,13 +360,13 @@
   /* ---------- SUGERENCIAS ---------- */
   function renderSug() {
     var day = curDay();
-    var aud = S.ui.sugFor || 'all';
+    var aud = S.ui.sugMine ? myFam() : 'all';
     var lv = S.ui.nivel;
     var d = DIAS[day - 1];
     var html = header('Sugerencias', 'Itinerarios que evitan lo ya visto');
     html += '<main>' + dayChips(day, 'data-day');
     html += '<div class="seg" id="lv">' + window.NIVELES.map(function (n) { return '<button data-lv="' + n.id + '" class="' + (lv === n.id ? 'on' : '') + '">' + n.nombre + '</button>'; }).join('') + '</div>';
-    html += '<div class="chips" style="margin-top:8px">' + ['all', 'A', 'B'].map(function (w) { return '<button class="chip ' + (aud === w ? 'on' : '') + '" data-aud="' + w + '">Para ' + esc(w === 'all' ? 'todos' : ST.famName(w)) + '</button>'; }).join('') + '</div>';
+    html += '<label class="toggle"><input type="checkbox" id="sugMine" ' + (S.ui.sugMine ? 'checked' : '') + '> Solo para mi familia (incluye lo que ha visto la otra familia)</label>';
     var sugs = C.suggestionsFor(day, lv, ST.blocks(), aud, window.SUGERENCIAS);
     var existing = C.lineBlocks(ST.blocks(), day, aud).filter(function (b) { return b.type !== 'fixed'; });
     html += '<p class="small muted" style="margin:6px 0 4px">' + d.largo + (d.tipo === 'llegada' ? ' · llegada al hotel hacia las 21:00' : d.tipo === 'salida' ? ' · check-out a las 12:00 y salida al aeropuerto a las 18:00' : ' · de 9:00 a 23:00') +
@@ -341,18 +386,22 @@
     html += '</div></main>';
     $('#app').innerHTML = html;
     document.querySelectorAll('[data-lv]').forEach(function (b) { b.onclick = function () { ST.setUi({ nivel: b.dataset.lv }); }; });
-    document.querySelectorAll('[data-aud]').forEach(function (b) { b.onclick = function () { ST.setUi({ sugFor: b.dataset.aud }); }; });
+    $('#sugMine').onchange = function (e) { ST.setUi({ sugMine: e.target.checked }); };
     document.querySelectorAll('[data-confirm]').forEach(function (b) {
       b.onclick = function () {
         var g = sugs[+b.dataset.confirm];
         var list = g.stops.map(function (s) {
           return s.n != null
-            ? { day: day, n: s.n, start: C.fmt(s.start), dur: s.dur, who: aud, status: 'plan', type: 'place', note: s.nota || '' }
-            : { day: day, start: C.fmt(s.start), dur: s.dur, who: aud, status: 'plan', type: 'free', title: s.titulo, place: s.libre === 'descanso' ? 'hotel' : s.libre === 'musical' ? 'teatros' : null };
+            ? { day: day, n: s.n, start: C.fmt(s.start), dur: s.dur, status: 'plan', type: 'place', note: s.nota || '' }
+            : { day: day, start: C.fmt(s.start), dur: s.dur, status: 'plan', type: 'free', title: s.titulo, place: s.libre === 'descanso' ? 'hotel' : s.libre === 'musical' ? 'teatros' : null };
         });
-        ST.putBlocks(list);
-        ST.setUi({ view: 'programa', day: day });
-        toast('Añadido al ' + d.corto + ': ' + list.length + ' bloques');
+        function apply(sc) {
+          ST.addBlocks(list, whoFor(sc), 'ha confirmado «' + g.tema.titulo + '» (' + list.length + ' planes)');
+          ST.setUi({ view: 'programa', day: day });
+          toast('Añadido al ' + d.corto + ': ' + list.length + ' planes');
+        }
+        if (S.ui.sugMine) apply('mine');
+        else askScope('«' + g.tema.titulo + '» el ' + d.corto, apply);
       };
     });
   }
@@ -481,10 +530,9 @@
     var f = C.ficha(n);
     var fam = myFam();
     var day = presetDay || (S.ui.view === 'programa' ? curDay() : null) || curDay();
-    var who = 'all';
     var start = null, nogap = false;
     function compute() {
-      var s = C.suggestStart(ST.blocks(), day, who === 'all' ? fam : who, n);
+      var s = C.suggestStart(ST.blocks(), day, fam, n);
       nogap = s == null;
       start = s != null ? C.fmt(s) : (f.plan.fun ? (C.funciones(f, day)[0] || '19:00') : (C.hoursOn(f, day).closed ? '10:00' : C.fmt(Math.max(C.hoursOn(f, day).open, 600))));
     }
@@ -493,9 +541,8 @@
       '<label class="f">Día</label><div class="chips" id="ad-days"></div>' +
       '<div id="ad-hours" class="small muted"></div>' +
       '<div class="filters"><div><label class="f">Hora</label><input type="time" id="ad-start"></div><div><label class="f">Duración (min)</label><input type="number" id="ad-dur" step="5" value="' + f.plan.dur + '"></div></div>' +
-      '<label class="f">Para quién</label><div class="seg" id="ad-who">' + ['all', 'A', 'B'].map(function (w) { return '<button data-w="' + w + '" class="' + (w === who ? 'on' : '') + '">' + esc(ST.famName(w)) + '</button>'; }).join('') + '</div>' +
       '<div id="ad-warn" class="warns" style="margin-top:12px"></div>' +
-      '<div class="actionbar"><button class="btn yellow" id="ad-ok">' + I.plus + ' Añadir</button></div>';
+      '<div class="actionbar" style="flex-direction:column"><button class="btn yellow" data-ad="all">' + I.plus + ' Añadir para todo el grupo</button><button class="btn ghost" data-ad="mine">' + I.plus + ' Añadir solo para mi familia</button></div>';
     openSheet('Añadir al programa', html, function (el) {
       function draw() {
         $('#ad-days', el).innerHTML = DIAS.map(function (d) {
@@ -506,25 +553,24 @@
         $('#ad-hours', el).textContent = C.hoursTxt(f, day) + (C.notaDia(f, day) ? ' · ' + C.notaDia(f, day) : '');
         preview();
       }
-      function tmp() { return { id: '__tmp', day: day, n: n, start: $('#ad-start', el).value, dur: +$('#ad-dur', el).value || f.plan.dur, who: who, status: 'plan', type: 'place' }; }
+      function tmp() { return { id: '__tmp', day: day, n: n, start: $('#ad-start', el).value, dur: +$('#ad-dur', el).value || f.plan.dur, who: fam, status: 'plan', type: 'place' }; }
       function preview() {
         var t = tmp();
-        var an = C.analyzeDay(ST.blocks().concat([t]), day, who === 'all' ? fam : who);
+        var an = C.analyzeDay(ST.blocks().concat([t]), day, fam);
         var ws = (an.byId.__tmp || []).filter(function (w) { return !w.reserva; });
         if (nogap && !(f.plan.fun ? !C.funciones(f, day).length : C.hoursOn(f, day).closed)) ws.unshift({ nivel: 'warn', txt: 'No hay un hueco libre con tiempo suficiente este día: ajusta la hora o mueve otros bloques' });
         $('#ad-warn', el).innerHTML = ws.length ? ws.map(function (w) { return '<div class="warn w-' + w.nivel + '">' + esc(w.txt) + '</div>'; }).join('') : '<div class="warn w-ok">Encaja en el programa del ' + DIAS[day - 1].corto + '</div>';
       }
       $('#ad-start', el).value = start;
       $('#ad-start', el).oninput = preview; $('#ad-dur', el).oninput = preview;
-      el.querySelectorAll('#ad-who button').forEach(function (x) { x.onclick = function () { who = x.dataset.w; el.querySelectorAll('#ad-who button').forEach(function (y) { y.classList.toggle('on', y === x); }); preview(); }; });
       draw();
-      $('#ad-ok', el).onclick = function () {
+      el.querySelectorAll('[data-ad]').forEach(function (bt) { bt.onclick = function () {
         var t = tmp(); delete t.id;
-        ST.putBlock(t);
+        ST.addBlocks([t], whoFor(bt.getAttribute('data-ad')));
         closeAllSheets();
         ST.setUi({ view: 'programa', day: day });
         toast('Añadido al ' + DIAS[day - 1].corto + ' a las ' + t.start);
-      };
+      }; });
     });
   }
 
@@ -585,8 +631,8 @@
     document.querySelectorAll('[data-now]').forEach(function (b) {
       b.onclick = function () {
         var n = +b.dataset.now;
-        ST.putBlock({ day: day, n: n, start: b.dataset.s, dur: C.ficha(n).plan.dur, who: fam, status: 'plan', type: 'place' });
-        toast('Añadido al programa de ' + ST.famName(fam) + ' a las ' + b.dataset.s);
+        var nb = { day: day, n: n, start: b.dataset.s, dur: C.ficha(n).plan.dur, status: 'plan', type: 'place' };
+        askScope('«' + C.ficha(n).nombre + '» a las ' + b.dataset.s, function (sc) { ST.addBlocks([nb], whoFor(sc)); toast('Añadido a las ' + b.dataset.s); });
       };
     });
   }
@@ -598,7 +644,7 @@
     html += '<main>';
     html += '<h2 class="sec">Hotel</h2><div class="card pad"><b>' + esc(h.nombre) + '</b><div class="muted small">' + esc(h.direccion) + '</div><div class="small" style="margin-top:6px">Check-in desde las 15:00 · check-out hasta las 12:00</div>' +
       '<div class="row-btns" style="margin-top:10px"><a class="btn maps small" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(h.nombre + ', ' + h.direccion) + '&travelmode=transit">' + I.nav + ' Volver al hotel</a></div></div>';
-    html += '<h2 class="sec">Vuelos</h2><div class="card pad small"><dl class="kv"><dt>Ida · vie 1</dt><dd>Málaga 11:55 → Múnich → Newark 19:05</dd><dt>Vuelta · jue 7</dt><dd>Newark 22:00 → Zúrich → Málaga 15:30 (vie 8)</dd></dl><p class="muted" style="margin:8px 0 0">Horarios del grupo que viaja con Voyage Privé. La otra familia puede ajustar sus bloques fijos en el Programa.</p></div>';
+    html += '<h2 class="sec">Vuelos</h2><div class="card pad small"><dl class="kv"><dt>Ida · vie 1</dt><dd>Málaga 11:55 → Múnich → Newark 19:05</dd><dt>Vuelta · jue 7</dt><dd>Newark 22:00 → Zúrich → Málaga 15:30 (vie 8)</dd></dl><p class="muted" style="margin:8px 0 0">Horarios de la reserva de Voyage Privé. Si alguien viaja en otros vuelos, puede ajustar los bloques fijos en el Programa.</p></div>';
     // reservas
     var need = [];
     ST.blocks().forEach(function (b) {
@@ -615,33 +661,34 @@
         '<div class="pt">' + (ok ? '<span class="badge done">Reservado</span>' + (x.b.booking.info ? '<span>' + esc(x.b.booking.info) + '</span>' : '') : '<span class="badge I">Pendiente</span><span>' + esc(x.f.reserva.nota || '') + '</span>') + '</div></div></div>';
     }).join('') + '</div>';
     // grupo
-    html += '<h2 class="sec">Grupo</h2><div class="card pad">';
-    var mem = Object.keys(S.members).map(function (k) { return S.members[k]; });
-    ['A', 'B'].forEach(function (fm) {
-      var names = mem.filter(function (m) { return m.fam === fm; }).map(function (m) { return esc(m.name); });
-      html += '<div style="margin-bottom:6px"><span class="who ' + fm + '">' + esc(ST.famName(fm)) + '</span> ' + (names.join(', ') || '<span class="muted small">nadie conectado aún</span>') + '</div>';
-    });
-    html += '<div class="small muted">Tú: ' + esc(S.me.name) + ' · ' + esc(ST.famName(S.me.fam)) + ' · <a href="#" id="perfil">cambiar</a></div>';
     var api = window.SYNC_API;
-    if (api && api.enabled() && api.tripId()) {
-      html += '<div class="row-btns" style="margin-top:12px"><button class="btn yellow" id="invitar">' + I.share + ' Invitar al grupo</button></div>';
-    } else if (S.tripId === 'local') {
-      html += '<p class="small" style="margin:10px 0 0">El programa está solo en este móvil.' + (api && api.enabled() ? ' <a href="#" id="subir">Subirlo a la nube e invitar al grupo</a>' : ' La sincronización se activará cuando esté configurada.') + '</p>';
-    }
+    var org = !!(C.persona(S.me.name) || {}).org;
+    html += '<h2 class="sec">Grupo</h2><div class="card pad">' + C.TRIP.personas.map(function (p) {
+      var k = C.nameKey(p.nombre), c = S.claims[k], dentro = !!(c && c.uid);
+      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0"><span>' + (dentro ? '<b style="color:var(--ok)">✓</b> ' : '<span class="muted">○</span> ') + esc(p.nombre) + (p.nombre === S.me.name ? ' <span class="muted small">(tú)</span>' : '') + '</span>' +
+        (org && dentro && p.nombre !== S.me.name ? '<button class="btn ghost small" data-release="' + k + '">Liberar</button>' : (dentro ? '' : '<span class="small muted">sin entrar</span>')) + '</div>';
+    }).join('') +
+      (org ? '<p class="small muted" style="margin:6px 0 0">«Liberar» deja entrar de nuevo con ese nombre (por ejemplo, si alguien cambia de móvil).</p>' : '');
+    if (api && api.tripId()) html += '<div class="row-btns" style="margin-top:12px"><button class="btn yellow" id="invitar">' + I.share + ' Enviar el enlace del viaje</button></div>';
+    var perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+    html += '<div style="margin-top:12px" class="small">' + (perm === 'granted' ? 'Avisos de cambios en este móvil: activados.' : perm === 'denied' ? 'Avisos del móvil bloqueados: actívalos en los ajustes del navegador para esta web.' : perm === 'unsupported' ? 'Este navegador no muestra avisos fuera de la app; los verás en la campana.' : '<button class="btn ghost small" id="avisos">' + I.bell + ' Activar avisos de cambios</button>') + '</div>';
     html += '<div class="small muted" style="margin-top:8px">Sincronización: ' + esc({ online: 'conectada', offline: 'sin conexión (los cambios se guardan y se suben al volver)', connecting: 'conectando…', off: 'desactivada', notrip: 'sin viaje', notfound: 'viaje no encontrado', error: 'error' }[S.sync.status] || S.sync.status) + (S.sync.error ? ' · ' + esc(S.sync.error) : '') + '</div></div>';
     html += '<h2 class="sec">Sin conexión</h2><div class="card pad small"><p style="margin:0 0 8px">Las fichas y el programa funcionan sin conexión. Las fotos se guardan al verlas; para tenerlas todas, descárgalas antes del viaje con wifi (≈9 MB).</p><button class="btn ghost small" id="fotos">Descargar todas las fotos</button> <span id="fotosSt" class="muted"></span>' +
       '<p class="muted" style="margin:10px 0 0">Los tiempos de traslado son estimaciones por distancia; para el recorrido exacto, «Cómo llegar» abre Google Maps.</p></div>';
     html += '<h2 class="sec">Créditos</h2><div class="card pad small muted">Fotos de Wikimedia Commons con licencia libre; autor y licencia en cada ficha. Datos de horarios y precios consultados en octubre de 2026.</div>';
     html += '</main>';
     $('#app').innerHTML = html;
-    $('#perfil').onclick = function (e) { e.preventDefault(); ST.S.me = null; ST.emit(); };
+    document.querySelectorAll('[data-release]').forEach(function (bt) { bt.onclick = function () {
+      var k = bt.getAttribute('data-release');
+      if (confirm('¿Liberar el nombre «' + (S.claims[k] || {}).name + '»? Ese móvil saldrá de la app.')) { api.release(k); toast('Nombre liberado'); }
+    }; });
+    if ($('#avisos')) $('#avisos').onclick = function () { Notification.requestPermission().then(function () { render(); }); };
     if ($('#invitar')) $('#invitar').onclick = function () {
       var url = api.inviteUrl();
       var txt = 'App del viaje a Nueva York: ábrela con este enlace y añádela a la pantalla de inicio';
       if (navigator.share) navigator.share({ title: 'Nueva York 2027', text: txt, url: url }).catch(function () {});
       else { navigator.clipboard.writeText(url).then(function () { toast('Enlace copiado'); }); }
     };
-    if ($('#subir')) $('#subir').onclick = function (e) { e.preventDefault(); api.create(S.trip.fam).then(function () { toast('Viaje subido a la nube'); }).catch(function (er) { toast('Error: ' + (er.code || er.message)); }); };
     $('#fotos').onclick = function () { downloadPhotos($('#fotosSt')); };
   }
   function downloadPhotos(el) {
@@ -674,7 +721,12 @@
     if ((x = t.closest('[data-add]'))) { addPlace(+x.getAttribute('data-add')); return; }
     if ((x = t.closest('[data-done]'))) {
       var b = S.blocks[x.getAttribute('data-done')];
-      if (b) { ST.putBlock(Object.assign({}, b, { status: b.status === 'done' ? 'plan' : 'done' })); toast(b.status === 'done' ? 'Marcado como pendiente' : 'Marcado como hecho'); }
+      if (b && ST.canEdit(b)) {
+        var nb = Object.assign({}, b, { status: b.status === 'done' ? 'plan' : 'done' });
+        var msg = nb.status === 'done' ? 'Marcado como hecho' : 'Marcado como pendiente';
+        if (b.who === 'all') askScope(nb.status === 'done' ? '¿Lo habéis hecho todos o solo tu familia?' : '¿Vuelve a pendiente para todos o solo para tu familia?', function (sc) { ST.updateBlock(b, nb, sc); toast(msg); });
+        else { ST.updateBlock(b, nb, 'all'); toast(msg); }
+      }
       return;
     }
     if (stop) return;

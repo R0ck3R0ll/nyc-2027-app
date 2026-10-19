@@ -1,57 +1,71 @@
 /* Sincronización con Firebase (Firestore + acceso anónimo).
-   Datos: trips/{viaje}            { nombre, fam: { A, B }, createdBy }
-          trips/{viaje}/blocks/{id} bloques del programa (cada uno con who: all | A | B)
-          trips/{viaje}/members/{uid} { name, fam }
+   Datos: trips/{viaje}              { nombre, createdBy }
+          trips/{viaje}/blocks/{id}   bloques del programa (who: all | A | B)
+          trips/{viaje}/claims/{nombre} quién ha entrado con cada nombre de la lista { uid, name }
+          trips/{viaje}/notifs/{id}   avisos de cambios { at, by, who, txt, day, blockId }
    El id del viaje es largo y aleatorio: solo entra quien tiene el enlace de invitación. */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, signInAnonymously, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch, serverTimestamp, connectFirestoreEmulator
+  doc, setDoc, deleteDoc, getDocFromServer, collection, onSnapshot, writeBatch, serverTimestamp,
+  query, orderBy, limit, connectFirestoreEmulator
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 const ST = window.STORE;
+const C = window.CORE;
 const CFG = window.FIREBASE_CONFIG;
 let db = null, user = null, tid = null, unsubs = [];
 let gotTrip = false;
 
 function clean(o) { return JSON.parse(JSON.stringify(o)); }
 function set(st) { ST.setSync(st); }
+function err(e) { console.error(e); set({ error: String(e && (e.code || e.message) || e) }); }
 
 const API = {
   ready: () => !!(db && user && tid && gotTrip),
   enabled: () => !!CFG,
   tripId: () => tid,
+  uid: () => user && user.uid,
   inviteUrl: () => tid ? location.origin + location.pathname + '?v=' + tid : '',
-  async create(fam) {
+  // Crea el viaje (solo el organizador, la primera vez)
+  async create() {
     await authReady;
     const id = ST.uid('v') + ST.uid('');
-    const trip = { nombre: window.CORE.TRIP.nombre, fam, createdBy: user.uid, created: serverTimestamp() };
     const batch = writeBatch(db);
-    batch.set(doc(db, 'trips', id), trip);
-    // Se suben los bloques que hubiera en el móvil (o los fijos del viaje)
-    let blocks = ST.blocks();
-    if (!blocks.length) blocks = window.CORE.TRIP.fijos.map(b => Object.assign({ status: 'plan' }, b));
-    blocks.forEach(b => batch.set(doc(db, 'trips', id, 'blocks', b.id), clean(b)));
-    // Sin esperar a la confirmación del servidor: sin conexión se guarda en el móvil y se sube después
-    batch.commit().catch(err);
+    batch.set(doc(db, 'trips', id), { nombre: C.TRIP.nombre, createdBy: user.uid, created: serverTimestamp() });
+    C.TRIP.fijos.forEach(b => batch.set(doc(db, 'trips', id, 'blocks', b.id), clean(Object.assign({ status: 'plan' }, b))));
+    await batch.commit();
     connect(id);
     return id;
   },
+  // Entrar con un nombre de la lista: 'ok' | 'taken' | 'offline' | 'notrip'
+  async claim(name) {
+    await authReady;
+    if (!tid) return 'notrip';
+    const key = C.nameKey(name);
+    const ref = doc(db, 'trips', tid, 'claims', key);
+    let snap;
+    try { snap = await getDocFromServer(ref); } catch (e) { return 'offline'; }
+    const cur = snap.exists() ? snap.data().uid : null;
+    if (cur && cur !== user.uid) return 'taken';
+    if (cur !== user.uid) {
+      try { await setDoc(ref, { uid: user.uid, name: C.persona(name).nombre, at: Date.now() }); }
+      catch (e) { return e && e.code === 'permission-denied' ? 'taken' : 'offline'; }
+    }
+    return 'ok';
+  },
+  // El organizador libera un nombre (p. ej. si alguien cambia de móvil)
+  release(key) {
+    const c = ST.S.claims[key];
+    return setDoc(doc(db, 'trips', tid, 'claims', key), { uid: null, name: c ? c.name : key, at: Date.now() }).catch(err);
+  },
   join(id) { connect(id); },
   putBlock(b) { return setDoc(doc(db, 'trips', tid, 'blocks', b.id), clean(b)).catch(err); },
-  putBlocks(list) {
-    const batch = writeBatch(db);
-    list.forEach(b => batch.set(doc(db, 'trips', tid, 'blocks', b.id), clean(b)));
-    return batch.commit().catch(err);
-  },
   delBlock(id) { return deleteDoc(doc(db, 'trips', tid, 'blocks', id)).catch(err); },
-  putMember(me) { return setDoc(doc(db, 'trips', tid, 'members', user.uid), clean({ name: me.name, fam: me.fam, at: Date.now() })).catch(err); },
-  putTrip(trip) { return updateDoc(doc(db, 'trips', tid), clean({ nombre: trip.nombre, fam: trip.fam })).catch(err); }
+  addNotif(n) { return setDoc(doc(db, 'trips', tid, 'notifs', n.id), clean(n)).catch(err); }
 };
 window.SYNC_API = API;
-
-function err(e) { console.error(e); set({ error: String(e && (e.code || e.message) || e) }); }
 
 function connect(id) {
   unsubs.forEach(u => u()); unsubs = [];
@@ -63,11 +77,8 @@ function connect(id) {
       return;
     }
     gotTrip = true;
-    const d = snap.data();
-    ST.applyRemote({ tripId: id, trip: { nombre: d.nombre, fam: d.fam } });
+    ST.applyRemote({ tripId: id, trip: { nombre: snap.data().nombre } });
     set({ status: snap.metadata.fromCache ? 'offline' : 'online' });
-    // Si el móvil tenía perfil, se registra como participante
-    if (ST.S.me) API.putMember(ST.S.me);
   }, e => { err(e); set({ status: 'error' }); }));
   unsubs.push(onSnapshot(collection(db, 'trips', id, 'blocks'), { includeMetadataChanges: true }, qs => {
     const blocks = {};
@@ -75,10 +86,28 @@ function connect(id) {
     ST.applyRemote({ blocks });
     if (gotTrip) set({ pending: qs.metadata.hasPendingWrites, status: qs.metadata.fromCache ? 'offline' : 'online' });
   }, err));
-  unsubs.push(onSnapshot(collection(db, 'trips', id, 'members'), qs => {
-    const members = {};
-    qs.forEach(s => { members[s.id] = s.data(); });
-    ST.applyRemote({ members });
+  unsubs.push(onSnapshot(collection(db, 'trips', id, 'claims'), { includeMetadataChanges: true }, qs => {
+    const claims = {};
+    qs.forEach(s => { claims[s.id] = s.data(); });
+    ST.applyRemote({ claims });
+    // ¿Sigue siendo mío el nombre con el que entré en este móvil?
+    const me = ST.S.me;
+    if (me && user && !qs.metadata.fromCache) {
+      const c = claims[C.nameKey(me.name)];
+      if (!c) API.claim(me.name);                       // entrada de una versión anterior o nombre liberado: se vuelve a reservar
+      else if (c.uid !== user.uid) ST.setMe(null);      // el nombre lo tiene otro móvil
+    }
+  }, err));
+  let first = true;
+  unsubs.push(onSnapshot(query(collection(db, 'trips', id, 'notifs'), orderBy('at', 'desc'), limit(80)), qs => {
+    const notifs = [];
+    qs.forEach(s => notifs.push(s.data()));
+    if (!first && window.onNewNotifs) {
+      const nuevos = qs.docChanges().filter(ch => ch.type === 'added' && !ch.doc.metadata.hasPendingWrites).map(ch => ch.doc.data());
+      if (nuevos.length) window.onNewNotifs(nuevos);
+    }
+    first = false;
+    ST.applyRemote({ notifs });
   }, err));
 }
 
@@ -95,9 +124,7 @@ if (!CFG) {
     connectAuthEmulator(auth, 'http://' + host + ':9099', { disableWarnings: true });
   }
   authReady = new Promise(resolve => {
-    onAuthStateChanged(auth, u => {
-      if (u) { user = u; resolve(u); }
-    });
+    onAuthStateChanged(auth, u => { if (u) { user = u; resolve(u); } });
   });
   set({ status: 'connecting' });
   signInAnonymously(auth).catch(e => {
@@ -107,7 +134,7 @@ if (!CFG) {
       window.addEventListener('online', () => signInAnonymously(auth).catch(err), { once: true });
     }
   });
-  authReady.then(() => {
+  API.started = authReady.then(() => {
     const fromUrl = new URLSearchParams(location.search).get('v');
     const id = fromUrl || (ST.S.tripId && ST.S.tripId !== 'local' ? ST.S.tripId : null);
     if (fromUrl) history.replaceState(null, '', location.pathname);

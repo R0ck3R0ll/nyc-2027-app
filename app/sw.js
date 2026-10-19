@@ -1,7 +1,7 @@
 /* Service worker: la app funciona sin conexión.
    - Estructura de la app (HTML, JS, CSS, datos): primero la red, si no hay, la copia guardada.
    - Fotos y librerías de Firebase: primero la copia guardada. */
-const VERSION = 'nyc27-v1';
+const VERSION = 'nyc27-v2';
 const SHELL = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'js/config.js', 'js/core.js', 'js/store.js',
   'js/app.js', 'js/sync.js', 'js/sugerencias.js', 'data/fichas.js', 'icons/icon-192.png'];
 
@@ -46,3 +46,12 @@ async function networkFirst(req) {
     throw err;
   }
 }
+
+// Al tocar un aviso de cambios se abre la app
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    for (const c of cs) { if ('focus' in c) return c.focus(); }
+    return self.clients.openWindow('./');
+  }));
+});

@@ -14,6 +14,11 @@
       { n: 6, fecha: '2027-01-06', corto: 'Mié 6', largo: 'Miércoles 6 de enero' },
       { n: 7, fecha: '2027-01-07', corto: 'Jue 7', largo: 'Jueves 7 de enero', tipo: 'salida' }
     ],
+    // Participantes autorizados y su familia (la familia no se muestra en la app)
+    personas: [
+      { nombre: 'Carlo', fam: 'A', org: true }, { nombre: 'María', fam: 'A' }, { nombre: 'Martina', fam: 'A' },
+      { nombre: 'Santi', fam: 'B' }, { nombre: 'Pilar', fam: 'B' }, { nombre: 'Irene', fam: 'B' }, { nombre: 'Salva', fam: 'B' }
+    ],
     hotel: { nombre: 'Kimpton Hotel Theta', direccion: '790 8th Ave, New York, NY 10019', lat: 40.76128, lng: -73.98745 },
     teatros: { lat: 40.7590, lng: -73.9865 },
     atardecer: 16 * 60 + 40,
@@ -26,6 +31,14 @@
       { id: 'fx-salida', day: 7, start: '18:00', dur: 60, type: 'fixed', who: 'all', title: 'Salida hacia Newark', note: 'Vuelo a las 22:00: llegar al aeropuerto hacia las 19:00', fixed: true, place: 'hotel' }
     ]
   };
+
+  /* ---------- participantes ---------- */
+  function nameKey(s) { return String(s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, ''); }
+  function persona(name) {
+    var k = nameKey(name);
+    for (var i = 0; i < TRIP.personas.length; i++) if (nameKey(TRIP.personas[i].nombre) === k) return TRIP.personas[i];
+    return null;
+  }
 
   /* ---------- tiempo ---------- */
   function toMin(hhmm) {
@@ -440,7 +453,7 @@
   }
 
   var CORE = {
-    TRIP: TRIP, toMin: toMin, fmt: fmt, durTxt: durTxt, roundUp: roundUp,
+    TRIP: TRIP, nameKey: nameKey, persona: persona, toMin: toMin, fmt: fmt, durTxt: durTxt, roundUp: roundUp,
     setFichas: setFichas, ficha: ficha, locOf: locOf, km: km, travel: travel,
     hoursOn: hoursOn, hoursTxt: hoursTxt, funciones: funciones, notaDia: notaDia, fitsHours: fitsHours,
     covers: covers, blockStart: blockStart, blockEnd: blockEnd, blockDur: blockDur, blockTitle: blockTitle,
