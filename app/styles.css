@@ -27,14 +27,22 @@
   --c-compras: #a7a9ac; --c-restauracion: #00add0; --c-libre: #808183;
   color-scheme: light;
 }
+/* modo oscuro: automático según el móvil, o forzado desde Opciones (data-theme) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0f0f10; --card: #1b1b1d; --ink: #f1f0ec; --ink2: #c9c7c1; --muted: #8f8d87; --line: #2c2c2f;
     --band: #000; --maps: #3cc0b8; --book: #d6a361; --ficha: #d68fc4; --err: #ff6b5f; --warn: #f0a83a;
     --info: #8fb1e6; --ok: #4cc77a; --chipA: #6d93e8; --chipB: #da7fd0;
     --shadow: 0 1px 2px rgba(0,0,0,.4);
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+    --bg: #0f0f10; --card: #1b1b1d; --ink: #f1f0ec; --ink2: #c9c7c1; --muted: #8f8d87; --line: #2c2c2f;
+    --band: #000; --maps: #3cc0b8; --book: #d6a361; --ficha: #d68fc4; --err: #ff6b5f; --warn: #f0a83a;
+    --info: #8fb1e6; --ok: #4cc77a; --chipA: #6d93e8; --chipB: #da7fd0;
+    --shadow: 0 1px 2px rgba(0,0,0,.4);
+    color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
@@ -78,7 +86,7 @@ main { padding: 12px 16px 24px; max-width: 760px; margin: 0 auto; }
 
 nav.tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: flex;
   background: var(--band); padding-bottom: var(--safe-b);
 }
 nav.tabs button {
@@ -302,3 +310,17 @@ table.t th { font-size: 12px; color: var(--muted); }
 /* filtros de Lugares en dos líneas, más bajos */
 .fchips { display: flex; gap: 5px; margin-bottom: 6px; }
 .fchips .chip { flex: 1 1 auto; justify-content: center; padding: 4px 5px; font-size: 12px; border-width: 1.5px; min-width: 0; }
+
+nav.tabs button { flex: 1 1 0; min-width: 0; }
+/* checklist */
+.ck { display: grid; gap: 2px; }
+.ck-row { display: flex; align-items: center; gap: 10px; padding: 7px 2px; border-bottom: 1px solid var(--line); }
+.ck-row:last-child { border-bottom: 0; }
+.ck-row input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--ok); flex: none; }
+.ck-row .ck-t { flex: 1; min-width: 0; font-size: 14.5px; }
+.ck-row.on .ck-t { text-decoration: line-through; color: var(--muted); }
+.ck-row .ck-b { border: 0; background: none; color: var(--muted); font-size: 17px; padding: 2px 6px; }
+.ck-row input[type=text] { padding: 6px 8px; font-size: 14.5px; }
+.ck-add { display: flex; gap: 8px; margin-top: 10px; }
+.ck-add input { flex: 1; }
+nav.tabs.six button { font-size: 10px; letter-spacing: -.01em; }

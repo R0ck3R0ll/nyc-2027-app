@@ -63,12 +63,22 @@ const API = {
   join(id) { connect(id); },
   putBlock(b) { return setDoc(doc(db, 'trips', tid, 'blocks', b.id), clean(b)).catch(err); },
   delBlock(id) { return deleteDoc(doc(db, 'trips', tid, 'blocks', id)).catch(err); },
-  addNotif(n) { return setDoc(doc(db, 'trips', tid, 'notifs', n.id), clean(n)).catch(err); }
+  addNotif(n) { return setDoc(doc(db, 'trips', tid, 'notifs', n.id), clean(n)).catch(err); },
+  putShared(d) { return setDoc(doc(db, 'trips', tid, 'shared', 'checklist'), clean(d)).catch(err); },
+  // Checklist común: solo Carlo y María lo leen (las reglas lo impiden a los demás)
+  watchShared() {
+    if (unsubShared || !tid || !ST.isAdmin()) return;
+    unsubShared = onSnapshot(doc(db, 'trips', tid, 'shared', 'checklist'), s => {
+      if (s.exists() && !s.metadata.hasPendingWrites) ST.applyRemote({ shared: s.data() });
+    }, e => { unsubShared = null; console.warn(e); });
+  }
 };
+let unsubShared = null;
 window.SYNC_API = API;
 
 function connect(id) {
   unsubs.forEach(u => u()); unsubs = [];
+  if (unsubShared) { unsubShared(); unsubShared = null; }
   tid = id; gotTrip = false;
   set({ status: 'connecting', error: '' });
   unsubs.push(onSnapshot(doc(db, 'trips', id), { includeMetadataChanges: true }, snap => {
@@ -78,6 +88,7 @@ function connect(id) {
     }
     gotTrip = true;
     ST.applyRemote({ tripId: id, trip: { nombre: snap.data().nombre } });
+    API.watchShared();
     set({ status: snap.metadata.fromCache ? 'offline' : 'online' });
   }, e => { err(e); set({ status: 'error' }); }));
   unsubs.push(onSnapshot(collection(db, 'trips', id, 'blocks'), { includeMetadataChanges: true }, qs => {

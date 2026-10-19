@@ -9,6 +9,10 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     // En una escritura por lotes (crear el viaje con sus bloques) el viaje existe «después» del lote
     function tripAfter(t) { return existsAfter(/databases/$(database)/documents/trips/$(t)); }
+    function isPerson(t, k) {
+      return exists(/databases/$(database)/documents/trips/$(t)/claims/$(k))
+        && get(/databases/$(database)/documents/trips/$(t)/claims/$(k)).data.uid == request.auth.uid;
+    }
     function isOrganizer(t) {
       return exists(/databases/$(database)/documents/trips/$(t)/claims/carlo)
         && get(/databases/$(database)/documents/trips/$(t)/claims/carlo).data.uid == request.auth.uid;
@@ -42,6 +46,10 @@ service cloud.firestore {
           && ((resource.data.uid == null && request.resource.data.uid == request.auth.uid)
               || (request.resource.data.uid == null && isOrganizer(t)));
         allow delete: if false;
+      }
+      // Checklist común de Carlo y María
+      match /shared/{id} {
+        allow read, write: if signedIn() && (isPerson(t, 'carlo') || isPerson(t, 'maria'));
       }
       match /notifs/{id} {
         allow read: if signedIn();

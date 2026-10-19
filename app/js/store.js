@@ -26,6 +26,8 @@
     members: saved.members || {},       // uid -> { name, fam }
     claims: saved.claims || {},         // nombre normalizado -> { uid, name }
     notifs: saved.notifs || [],         // avisos de cambios (los últimos)
+    shared: saved.shared || null,       // checklist común de Carlo y María { items: [...] }
+    mycheck: saved.mycheck || { on: false, items: [] },   // checklist personal (solo en este móvil)
     ui: Object.assign({ view: 'programa', day: null, showOther: false, nivel: 'equilibrado', sugMine: false, ack: {}, ackBefore: 0,
                         banco: { q: '', cat: '', clas: '', estado: '', dia: '' } }, saved.ui || {}),
     sync: { status: 'off', error: '' }
@@ -43,7 +45,7 @@
     saveTimer = setTimeout(function () {
       try {
         localStorage.setItem(KEY, JSON.stringify({ tripId: S.tripId, trip: S.trip, me: S.me, blocks: S.blocks, members: S.members,
-          claims: S.claims, notifs: S.notifs.slice(0, 60), ui: S.ui }));
+          claims: S.claims, notifs: S.notifs.slice(0, 60), shared: S.shared, mycheck: S.mycheck, ui: S.ui }));
       } catch (e) { /* almacenamiento lleno o bloqueado: la nube sigue funcionando */ }
     }, 150);
   }
@@ -152,6 +154,19 @@
     },
 
     setUi: function (patch) { Object.assign(S.ui, patch); emit(); },
+    // Papeles: org = Carlo (organizador) · admin = Carlo y María (Viaje, checklist común) · el resto, invitados
+    role: function () {
+      if (!S.me) return 'guest';
+      var k = window.CORE.nameKey(S.me.name);
+      return k === 'carlo' ? 'org' : k === 'maria' ? 'admin' : 'guest';
+    },
+    isAdmin: function () { var r = STORE.role(); return r === 'org' || r === 'admin'; },
+    putShared: function (items) {
+      S.shared = { items: items, at: Date.now(), by: S.me ? S.me.name : '' };
+      emit();
+      var be = backend(); if (be) be.putShared(S.shared);
+    },
+    putMycheck: function (patch) { S.mycheck = Object.assign({}, S.mycheck, patch); emit(); },
     setMe: function (me) {
       S.me = me;
       // lo anterior a la primera entrada no queda pendiente de aceptar
@@ -187,7 +202,7 @@
     },
     // Llamadas desde sync.js con los datos que llegan de la nube
     applyRemote: function (patch) {
-      ['trip', 'blocks', 'members', 'claims', 'notifs', 'tripId'].forEach(function (k) { if (patch[k] !== undefined) S[k] = patch[k]; });
+      ['trip', 'blocks', 'members', 'claims', 'notifs', 'tripId', 'shared'].forEach(function (k) { if (patch[k] !== undefined) S[k] = patch[k]; });
       emit();
     },
     setSync: function (st) { S.sync = Object.assign({}, S.sync, st); emit(); },

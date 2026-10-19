@@ -38,6 +38,7 @@
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>',
     doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg>',
     route: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></svg>',
+    gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
     bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
     share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>'
   };
@@ -94,13 +95,18 @@
   }
 
   /* ---------- cabecera y pestañas ---------- */
-  var TABS = [
-    { id: 'programa', nombre: 'Programa', icon: I.cal },
-    { id: 'sugerencias', nombre: 'Sugerencias', icon: I.spark },
-    { id: 'banco', nombre: 'Lugares', icon: I.list },
-    { id: 'ahora', nombre: 'Ahora', icon: I.now },
-    { id: 'viaje', nombre: 'Viaje', icon: I.trip }
-  ];
+  function tabsFor() {
+    var t = [
+      { id: 'programa', nombre: 'Programa', icon: I.cal },
+      { id: 'sugerencias', nombre: 'Sugerencias', icon: I.spark },
+      { id: 'banco', nombre: 'Lugares', icon: I.list },
+      { id: 'ahora', nombre: 'Ahora', icon: I.now }
+    ];
+    if (ST.isAdmin()) t.push({ id: 'viaje', nombre: 'Viaje', icon: I.trip });
+    else t.push({ id: 'opciones', nombre: 'Opciones', icon: I.gear });
+    if (ST.role() === 'org') t.push({ id: 'docs', nombre: 'Documentos', icon: I.doc });
+    return t;
+  }
   function header(title, sub) {
     var st = S.sync.status;
     var stTxt = { online: 'Sincronizado', offline: 'Sin conexión: se guardará al volver', connecting: 'Conectando…', off: 'Solo en este móvil', notrip: 'Sin viaje en la nube', notfound: 'Viaje no encontrado', error: 'Error de sincronización' }[st] || '';
@@ -110,7 +116,9 @@
       '<span title="' + esc(stTxt) + '" class="sync-dot ' + st + '"></span></div></div></header>';
   }
   function renderTabs() {
-    $('#tabs').innerHTML = TABS.map(function (t) {
+    var tb = tabsFor();
+    $('#tabs').classList.toggle('six', tb.length > 5);
+    $('#tabs').innerHTML = tb.map(function (t) {
       return '<button data-tab="' + t.id + '" class="' + (S.ui.view === t.id ? 'on' : '') + '">' + t.icon + '<span>' + t.nombre + '</span><i class="dot"></i></button>';
     }).join('');
   }
@@ -151,7 +159,7 @@
         return api.tripId() ? null : (p.org ? api.create() : Promise.reject({ msg: 'Abre el enlace del viaje que ha mandado Carlo.' }));
       }).then(function () { return api.claim(p.nombre); }).then(function (r) {
         busy = false;
-        if (r === 'ok') { welcomeMsg = ''; ST.setMe({ name: p.nombre, fam: p.fam }); askNotifPermission(); return; }
+        if (r === 'ok') { welcomeMsg = ''; ST.setMe({ name: p.nombre, fam: p.fam }); api.watchShared(); askNotifPermission(); return; }
         welcomeMsg = r === 'taken' ? p.nombre + ' ya ha entrado desde otro móvil. Si es un error, pide a Carlo que libere tu nombre.'
           : r === 'offline' ? 'Hace falta conexión a internet para entrar la primera vez.'
           : 'Abre el enlace del viaje que ha mandado Carlo.';
@@ -711,6 +719,7 @@
     var cur = null;
     C.lineBlocks(ST.blocks(), day, fam).forEach(function (b) { if (C.blockStart(b) <= now && C.blockEnd(b) > now) cur = b; });
     if (cur) html += '<div class="card pad small" style="margin-bottom:8px">Ahora mismo: <b>' + esc(C.blockTitle(cur)) + '</b> hasta las ' + C.fmt(C.blockEnd(cur)) + '</div>';
+    html += '<a class="btn maps full" style="margin-bottom:10px" target="_blank" rel="noopener" href="' + hotelDir() + '">' + I.nav + ' Volver al hotel</a>';
     html += '<div class="card nextbox"><div><div class="small muted">' + (res.next ? 'Siguiente en el programa' : 'Sin nada más programado') + '</div><b>' + (res.next ? C.fmt(C.blockStart(res.next)) + ' · ' + esc(C.blockTitle(res.next)) : 'Hasta las 23:00') + '</b></div><div style="text-align:right"><div class="small muted">Tiempo libre</div><b>' + (left > 0 ? C.durTxt(left) : '—') + '</b></div></div>';
     html += '<div class="chips" style="margin-top:12px">' + [['', 'Todo'], ['cerca', 'Cerca (≤15 min)'], ['comer', 'Comer'], ['I', 'Imprescindibles']].map(function (x) { return '<button class="chip ' + (filt === x[0] ? 'on' : '') + '" data-af="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
     if (!opts.length) html += '<div class="card empty"><div class="big">Nada encaja ahora</div>Con el tiempo libre y los horarios de este momento no hay opciones de este tipo.</div>';
@@ -745,12 +754,78 @@
   }
 
   /* ---------- VIAJE ---------- */
+  function hotelDir() {
+    var h = C.TRIP.hotel;
+    return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(h.nombre + ', ' + h.direccion) + '&travelmode=transit';
+  }
+
+  /* ---------- checklist (común de Carlo y María, o personal) ---------- */
+  function checklistHtml(items, id) {
+    return '<div class="ck" id="' + id + '">' + (items.length ? items.map(function (it, i) {
+      return '<div class="ck-row' + (it.done ? ' on' : '') + '" data-i="' + i + '"><input type="checkbox" ' + (it.done ? 'checked' : '') + ' data-ck="tog">' +
+        '<span class="ck-t">' + esc(it.txt) + '</span><button class="ck-b" data-ck="edit" aria-label="Modificar">✎</button><button class="ck-b" data-ck="del" aria-label="Quitar">×</button></div>';
+    }).join('') : '<div class="small muted" style="padding:6px 0">Lista vacía.</div>') + '</div>' +
+      '<div class="ck-add"><input type="text" id="' + id + '-new" placeholder="Añadir…"><button class="btn small" id="' + id + '-add">' + I.plus + '</button></div>';
+  }
+  function wireChecklist(id, getItems, save) {
+    var box = document.getElementById(id);
+    if (!box) return;
+    box.querySelectorAll('.ck-row').forEach(function (row) {
+      var i = +row.getAttribute('data-i');
+      row.querySelector('[data-ck="tog"]').onchange = function (e) { var it = getItems().slice(); it[i] = Object.assign({}, it[i], { done: e.target.checked }); save(it); };
+      row.querySelector('[data-ck="del"]').onclick = function () { var it = getItems().slice(); it.splice(i, 1); save(it); };
+      row.querySelector('[data-ck="edit"]').onclick = function () {
+        var span = row.querySelector('.ck-t');
+        span.outerHTML = '<input type="text" class="ck-t" value="' + esc(getItems()[i].txt) + '">';
+        var inp = row.querySelector('input.ck-t');
+        inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
+        var done = false;
+        function commit() { if (done) return; done = true; var v = inp.value.trim(); var it = getItems().slice(); if (v) it[i] = Object.assign({}, it[i], { txt: v }); save(it); }
+        inp.onkeydown = function (e) { if (e.key === 'Enter') commit(); };
+        inp.onblur = commit;
+      };
+    });
+    var inp = document.getElementById(id + '-new');
+    function add() { var v = inp.value.trim(); if (!v) return; save(getItems().concat([{ id: ST.uid('c'), txt: v, done: false }])); }
+    document.getElementById(id + '-add').onclick = add;
+    inp.onkeydown = function (e) { if (e.key === 'Enter') add(); };
+  }
+
+  /* ---------- apariencia ---------- */
+  function applyTheme() {
+    var t = S.ui.theme || 'auto';
+    if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', t);
+  }
+  function themeHtml() {
+    var t = S.ui.theme || 'auto';
+    return '<div class="seg" id="theme">' + [['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Oscuro']].map(function (x) {
+      return '<button data-theme-set="' + x[0] + '" class="' + (t === x[0] ? 'on' : '') + '">' + x[1] + '</button>';
+    }).join('') + '</div>';
+  }
+  function offlineHtml() {
+    return '<div class="card pad small"><p style="margin:0 0 8px">Las fichas y el programa funcionan sin conexión. Las fotos se guardan al verlas; para tenerlas todas, descárgalas antes del viaje con wifi (≈9 MB).</p><button class="btn ghost small" id="fotos">Descargar todas las fotos</button> <span id="fotosSt" class="muted"></span>' +
+      '<p class="muted" style="margin:10px 0 0">Los tiempos de traslado son estimaciones por distancia; para el recorrido exacto, «Cómo llegar» abre Google Maps.</p></div>';
+  }
+  function notifPermHtml() {
+    var perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+    return perm === 'granted' ? 'Avisos de cambios en este móvil: activados.' : perm === 'denied' ? 'Avisos del móvil bloqueados: actívalos en los ajustes del navegador para esta web.' : perm === 'unsupported' ? 'Este navegador no muestra avisos fuera de la app; los verás en la campana.' : '<button class="btn ghost small" id="avisos">' + I.bell + ' Activar avisos de cambios</button>';
+  }
+  function wireCommon() {
+    document.querySelectorAll('[data-theme-set]').forEach(function (b) { b.onclick = function () { ST.setUi({ theme: b.getAttribute('data-theme-set') }); }; });
+    if ($('#fotos')) $('#fotos').onclick = function () { downloadPhotos($('#fotosSt')); };
+    if ($('#avisos')) $('#avisos').onclick = function () { Notification.requestPermission().then(function () { render(); }); };
+  }
+  var CREDITOS = '<h2 class="sec">Créditos</h2><div class="card pad small muted">Fotos de Wikimedia Commons con licencia libre; autor y licencia en cada ficha. Datos de horarios y precios consultados en octubre de 2026.</div>';
+
+  /* ---------- VIAJE (Carlo y María) ---------- */
   function renderViaje() {
     var h = C.TRIP.hotel;
+    var org = ST.role() === 'org';
+    var api = window.SYNC_API;
     var html = header('Viaje', 'Datos generales');
     html += '<main>';
-    html += '<h2 class="sec">Hotel</h2><div class="card pad"><b>' + esc(h.nombre) + '</b><div class="muted small">' + esc(h.direccion) + '</div><div class="small" style="margin-top:6px">Check-in desde las 15:00 · check-out hasta las 12:00</div>' +
-      '<div class="row-btns" style="margin-top:10px"><a class="btn maps small" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(h.nombre + ', ' + h.direccion) + '&travelmode=transit">' + I.nav + ' Volver al hotel</a></div></div>';
+    html += '<h2 class="sec">Hotel</h2><div class="card pad"><b>' + esc(h.nombre) + '</b><div class="muted small">' + esc(h.direccion) + '</div><div class="small" style="margin-top:6px">Check-in desde las 15:00 · check-out hasta las 12:00</div></div>';
     html += '<h2 class="sec">Vuelos</h2><div class="card pad small"><dl class="kv"><dt>Ida · vie 1</dt><dd>Málaga 11:55 → Múnich → Newark 19:05</dd><dt>Vuelta · jue 7</dt><dd>Newark 22:00 → Zúrich → Málaga 15:30 (vie 8)</dd></dl><p class="muted" style="margin:8px 0 0">Horarios de la reserva de Voyage Privé. Si alguien viaja en otros vuelos, puede ajustar los bloques fijos en el Programa.</p></div>';
     // reservas
     var need = [];
@@ -767,37 +842,62 @@
       return '<div class="card pcard" data-block="' + x.b.id + '"><div class="pi"><div class="pn">' + bullet(x.f) + '<span>' + esc(x.f.nombre) + '</span></div><div class="pz">' + DIAS[x.b.day - 1].corto + ' ' + esc(x.b.start) + ' ' + whoChip(x.b.who) + '</div>' +
         '<div class="pt">' + (ok ? '<span class="badge done">Reservado</span>' + (x.b.booking.info ? '<span>' + esc(x.b.booking.info) + '</span>' : '') : '<span class="badge I">Pendiente</span><span>' + esc(x.f.reserva.nota || '') + '</span>') + '</div></div></div>';
     }).join('') + '</div>';
-    // grupo
-    var api = window.SYNC_API;
-    var org = !!(C.persona(S.me.name) || {}).org;
-    html += '<h2 class="sec">Grupo</h2><div class="card pad">' + C.TRIP.personas.map(function (p) {
-      var k = C.nameKey(p.nombre), c = S.claims[k], dentro = !!(c && c.uid);
-      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0"><span>' + (dentro ? '<b style="color:var(--ok)">✓</b> ' : '<span class="muted">○</span> ') + esc(p.nombre) + (p.nombre === S.me.name ? ' <span class="muted small">(tú)</span>' : '') + '</span>' +
-        (org && dentro && p.nombre !== S.me.name ? '<button class="btn ghost small" data-release="' + k + '">Liberar</button>' : (dentro ? '' : '<span class="small muted">sin entrar</span>')) + '</div>';
-    }).join('') +
-      (org ? '<p class="small muted" style="margin:6px 0 0">«Liberar» deja entrar de nuevo con ese nombre (por ejemplo, si alguien cambia de móvil).</p>' : '');
-    if (api && api.tripId()) html += '<div class="row-btns" style="margin-top:12px"><button class="btn yellow" id="invitar">' + I.share + ' Enviar el enlace del viaje</button></div>';
-    var perm = ('Notification' in window) ? Notification.permission : 'unsupported';
-    html += '<div style="margin-top:12px" class="small">' + (perm === 'granted' ? 'Avisos de cambios en este móvil: activados.' : perm === 'denied' ? 'Avisos del móvil bloqueados: actívalos en los ajustes del navegador para esta web.' : perm === 'unsupported' ? 'Este navegador no muestra avisos fuera de la app; los verás en la campana.' : '<button class="btn ghost small" id="avisos">' + I.bell + ' Activar avisos de cambios</button>') + '</div>';
-    html += '<div class="small muted" style="margin-top:8px">Sincronización: ' + esc({ online: 'conectada', offline: 'sin conexión (los cambios se guardan y se suben al volver)', connecting: 'conectando…', off: 'desactivada', notrip: 'sin viaje', notfound: 'viaje no encontrado', error: 'error' }[S.sync.status] || S.sync.status) + (S.sync.error ? ' · ' + esc(S.sync.error) : '') + '</div></div>';
-    html += '<h2 class="sec">Sin conexión</h2><div class="card pad small"><p style="margin:0 0 8px">Las fichas y el programa funcionan sin conexión. Las fotos se guardan al verlas; para tenerlas todas, descárgalas antes del viaje con wifi (≈9 MB).</p><button class="btn ghost small" id="fotos">Descargar todas las fotos</button> <span id="fotosSt" class="muted"></span>' +
-      '<p class="muted" style="margin:10px 0 0">Los tiempos de traslado son estimaciones por distancia; para el recorrido exacto, «Cómo llegar» abre Google Maps.</p></div>';
-    html += '<h2 class="sec">Créditos</h2><div class="card pad small muted">Fotos de Wikimedia Commons con licencia libre; autor y licencia en cada ficha. Datos de horarios y precios consultados en octubre de 2026.</div>';
-    html += '</main>';
+    // checklist común (se sincroniza solo entre Carlo y María)
+    var shared = (S.shared && S.shared.items) || [];
+    var hechos = shared.filter(function (x) { return x.done; }).length;
+    html += '<h2 class="sec">Checklist del viaje' + (shared.length ? ' · ' + hechos + '/' + shared.length : '') + '</h2><div class="card pad">' + checklistHtml(shared, 'ckShared') +
+      '<p class="small muted" style="margin:8px 0 0">Compartida entre Carlo y María' + (S.shared && S.shared.by ? ' · último cambio: ' + esc(S.shared.by) : '') + '.</p></div>';
+    // grupo (solo Carlo)
+    if (org) {
+      html += '<h2 class="sec">Grupo</h2><div class="card pad">' + C.TRIP.personas.map(function (p) {
+        var k = C.nameKey(p.nombre), c = S.claims[k], dentro = !!(c && c.uid);
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0"><span>' + (dentro ? '<b style="color:var(--ok)">✓</b> ' : '<span class="muted">○</span> ') + esc(p.nombre) + (p.nombre === S.me.name ? ' <span class="muted small">(tú)</span>' : '') + '</span>' +
+          (dentro && p.nombre !== S.me.name ? '<button class="btn ghost small" data-release="' + k + '">Liberar</button>' : (dentro ? '' : '<span class="small muted">sin entrar</span>')) + '</div>';
+      }).join('') + '<p class="small muted" style="margin:6px 0 0">«Liberar» deja entrar de nuevo con ese nombre (por ejemplo, si alguien cambia de móvil).</p>';
+      if (api && api.tripId()) html += '<div class="row-btns" style="margin-top:12px"><button class="btn yellow" id="invitar">' + I.share + ' Enviar el enlace del viaje</button></div>';
+      html += '<div class="small muted" style="margin-top:8px">Sincronización: ' + esc({ online: 'conectada', offline: 'sin conexión (los cambios se guardan y se suben al volver)', connecting: 'conectando…', off: 'desactivada', notrip: 'sin viaje', notfound: 'viaje no encontrado', error: 'error' }[S.sync.status] || S.sync.status) + (S.sync.error ? ' · ' + esc(S.sync.error) : '') + '</div></div>';
+    }
+    html += '<h2 class="sec">Ajustes</h2><div class="card pad"><label class="f" style="margin-top:0">Apariencia</label>' + themeHtml() + '<div class="small" style="margin-top:12px">' + notifPermHtml() + '</div></div>';
+    html += '<h2 class="sec">Sin conexión</h2>' + offlineHtml() + CREDITOS + '</main>';
     $('#app').innerHTML = html;
+    wireChecklist('ckShared', function () { return (S.shared && S.shared.items) || []; }, function (it) { ST.putShared(it); });
     document.querySelectorAll('[data-release]').forEach(function (bt) { bt.onclick = function () {
       var k = bt.getAttribute('data-release');
       if (confirm('¿Liberar el nombre «' + (S.claims[k] || {}).name + '»? Ese móvil saldrá de la app.')) { api.release(k); toast('Nombre liberado'); }
     }; });
-    if ($('#avisos')) $('#avisos').onclick = function () { Notification.requestPermission().then(function () { render(); }); };
     if ($('#invitar')) $('#invitar').onclick = function () {
       var url = api.inviteUrl();
       var txt = 'App del viaje a Nueva York: ábrela con este enlace y añádela a la pantalla de inicio';
       if (navigator.share) navigator.share({ title: 'Nueva York 2027', text: txt, url: url }).catch(function () {});
       else { navigator.clipboard.writeText(url).then(function () { toast('Enlace copiado'); }); }
     };
-    $('#fotos').onclick = function () { downloadPhotos($('#fotosSt')); };
+    wireCommon();
   }
+
+  /* ---------- OPCIONES (resto del grupo) ---------- */
+  function renderOpciones() {
+    var mc = S.mycheck || { on: false, items: [] };
+    var html = header('Opciones', esc(S.me.name));
+    html += '<main>';
+    html += '<h2 class="sec">Tú</h2><div class="card pad">Has entrado como <b>' + esc(S.me.name) + '</b>.<p class="small muted" style="margin:6px 0 0">Si cambias de móvil, pide a Carlo que libere tu nombre.</p></div>';
+    html += '<h2 class="sec">Apariencia</h2><div class="card pad">' + themeHtml() + '<div class="small" style="margin-top:12px">' + notifPermHtml() + '</div></div>';
+    html += '<h2 class="sec">Mi checklist pre-viaje</h2><div class="card pad">' +
+      '<label class="toggle" style="margin:0"><input type="checkbox" id="mcOn" ' + (mc.on ? 'checked' : '') + '> Usar mi checklist</label>' +
+      (mc.on ? '<div style="margin-top:8px">' + checklistHtml(mc.items || [], 'ckMine') + '</div><p class="small muted" style="margin:8px 0 0">Solo se guarda en este móvil.</p>' : '') + '</div>';
+    html += '<h2 class="sec">Sin conexión</h2>' + offlineHtml() + CREDITOS + '</main>';
+    $('#app').innerHTML = html;
+    $('#mcOn').onchange = function (e) { ST.putMycheck({ on: e.target.checked }); };
+    wireChecklist('ckMine', function () { return (S.mycheck && S.mycheck.items) || []; }, function (it) { ST.putMycheck({ items: it }); });
+    wireCommon();
+  }
+
+  /* ---------- DOCUMENTOS (solo Carlo) ---------- */
+  function renderDocs() {
+    var html = header('Documentos', 'Documentación y reservas');
+    html += '<main><div class="card empty"><div class="big">En preparación</div>Aquí estarán los documentos del viaje y las reservas, solo para consulta. Se completa en la Fase 5.</div></main>';
+    $('#app').innerHTML = html;
+  }
+
   function downloadPhotos(el) {
     if (!('caches' in window)) { el.textContent = 'No disponible en este navegador'; return; }
     var urls = [];
@@ -853,6 +953,7 @@
 
   /* ---------- render ---------- */
   function render() {
+    applyTheme();
     var y = window.scrollY;
     var sameView = render._last === S.ui.view + '|' + curDay();
     if (!S.trip || !S.me) {
@@ -866,8 +967,11 @@
       return;
     }
     $('#tabs').classList.remove('hidden');
+    var okTabs = tabsFor().map(function (t) { return t.id; });
+    if (okTabs.indexOf(S.ui.view) < 0) S.ui.view = (S.ui.view === 'viaje' || S.ui.view === 'opciones') ? okTabs[4] : 'programa';
     renderTabs();
-    ({ programa: renderPrograma, sugerencias: renderSug, banco: renderBanco, ahora: renderAhora, viaje: renderViaje }[S.ui.view] || renderPrograma)();
+    var view = S.ui.view;
+    ({ programa: renderPrograma, sugerencias: renderSug, banco: renderBanco, ahora: renderAhora, viaje: renderViaje, opciones: renderOpciones, docs: renderDocs }[view] || renderPrograma)();
     if (sameView) window.scrollTo(0, y);
     render._last = S.ui.view + '|' + curDay();
   }
