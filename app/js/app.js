@@ -183,17 +183,40 @@
     } catch (e) {}
   };
   function openNotifs() {
-    var list = ST.mine();
-    var seen = S.ui.seenAt || 0;
-    var html = list.length ? '<div class="list">' + list.slice(0, 60).map(function (n) {
-      var d = new Date(n.at);
-      var when = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-      return '<div class="card pad small" style="' + (n.at > seen && n.by !== S.me.name ? 'border-left:4px solid var(--accent)' : '') + '"' + (n.day ? ' data-nday="' + n.day + '"' : '') + '><b>' + esc(n.by === S.me.name ? 'Tú' : n.by) + '</b> ' + esc(n.by === S.me.name ? n.txt.replace(/^ha /, 'has ') : n.txt) + '<div class="muted" style="margin-top:3px">' + when + '</div></div>';
-    }).join('') + '</div>' : '<div class="empty">Sin cambios todavía.</div>';
-    ST.setUi({ seenAt: Date.now() });
-    openSheet('Cambios en el programa', html, function (el) {
-      el.querySelectorAll('[data-nday]').forEach(function (c) { c.onclick = function () { var d = +c.getAttribute('data-nday'); closeSheet(); ST.setUi({ view: 'programa', day: d }); }; });
+    function body() {
+      var pend = ST.unseen();
+      var pendIds = {}; pend.forEach(function (n) { pendIds[n.id] = 1; });
+      var list = ST.mine();
+      var html = pend.length ? '<button class="btn yellow full" id="ackAll" style="margin-bottom:12px">' + I.check + ' Aceptar todos (' + pend.length + ')</button>' : '';
+      html += list.length ? '<div class="list">' + list.slice(0, 60).map(function (n) {
+        var d = new Date(n.at);
+        var when = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        var mine = n.by === S.me.name, p = pendIds[n.id];
+        return '<div class="card pad small" style="' + (p ? 'border-left:4px solid var(--accent)' : 'opacity:.75') + '">' +
+          '<b>' + esc(mine ? 'Tú' : n.by) + '</b> ' + esc(mine ? n.txt.replace(/^ha /, 'has ') : n.txt) +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px"><span class="muted">' + when + '</span><span style="display:flex;gap:6px">' +
+          (n.day ? '<button class="btn ghost small" data-nday="' + n.day + '">Ver</button>' : '') +
+          (p ? '<button class="btn yellow small" data-ack1="' + n.id + '">' + I.check + ' Visto</button>' : '') + '</span></div></div>';
+      }).join('') + '</div>' : '<div class="empty">Sin cambios todavía.</div>';
+      return html;
+    }
+    openSheet('Cambios en el programa', body(), function (el) {
+      function wire() {
+        if ($('#ackAll', el)) $('#ackAll', el).onclick = function () { ST.ack(ST.unseen().map(function (n) { return n.id; })); el.innerHTML = body(); wire(); };
+        el.querySelectorAll('[data-ack1]').forEach(function (bt) { bt.onclick = function () { ST.ack(bt.getAttribute('data-ack1')); el.innerHTML = body(); wire(); }; });
+        el.querySelectorAll('[data-nday]').forEach(function (c) { c.onclick = function () { var d = +c.getAttribute('data-nday'); closeSheet(); ST.setUi({ view: 'programa', day: d }); }; });
+      }
+      wire();
     });
+  }
+  function pendBanner(list) {
+    if (!list.length) return '';
+    var n = list[0];
+    var txt = /^ha (añadido|confirmado)/.test(n.txt) ? '<b>Nuevo</b> · añadido por ' + esc(n.by)
+      : /^ha quitado/.test(n.txt) ? '<b>Quitado</b> por ' + esc(n.by) + (/solo para su familia/.test(n.txt) ? ' solo para su familia' : '')
+      : '<b>' + esc(n.by) + '</b> ' + esc(n.txt);
+    return '<div class="pend-msg"><span>' + txt + (list.length > 1 ? ' <span class="muted">(+' + (list.length - 1) + ')</span>' : '') + '</span>' +
+      '<button class="btn yellow small" data-ack="' + list.map(function (x) { return x.id; }).join(',') + '" data-stop>' + I.check + ' Visto</button></div>';
   }
 
   /* ---------- PROGRAMA ---------- */
@@ -209,10 +232,11 @@
     return C.analyzeDay(ST.blocks(), day, myFam()).resumen;
   }
   function dayChips(sel, attr) {
+    var pd = ST.pendingDays();
     return '<div class="days">' + DIAS.map(function (d) {
       var r = dayLoad(d.n);
       var parts = d.corto.split(' ');
-      return '<button class="chip daychip ' + (sel === d.n ? 'on' : '') + '" ' + attr + '="' + d.n + '"><span class="d1">' + parts[0] + '</span><span class="d2">' + parts[1] + '</span><span class="load ' + r.nivel + '"></span></button>';
+      return '<button class="chip daychip ' + (sel === d.n ? 'on' : '') + '" ' + attr + '="' + d.n + '">' + (pd[d.n] ? '<i class="pdot"></i>' : '') + '<span class="d1">' + parts[0] + '</span><span class="d2">' + parts[1] + '</span><span class="load ' + r.nivel + '"></span></button>';
     }).join('') + '</div>';
   }
   function renderPrograma() {
@@ -234,13 +258,19 @@
       html += '<div class="loadbar"><i style="width:' + pct + '%;background:' + col + '"></i></div><div class="small muted">Carga del día: ' + { ligero: 'ligera', completo: 'completa', cargado: 'muy cargada' }[r.nivel] + '</div>';
     }
     html += '<label class="toggle"><input type="checkbox" id="showOther" ' + (S.ui.showOther ? 'checked' : '') + '> Ver también los planes de la otra familia</label>';
+    var hasGhost = ST.unseen().some(function (n) { return n.ghost && n.ghost.day === day; });
     if (!list.length || list.every(function (b) { return b.type === 'fixed'; })) {
       html += '<div class="card empty"><div class="big">' + (list.length ? 'Solo hay lo fijo' : 'Día vacío') + '</div>Elige una sugerencia o añade lugares desde el banco.<div class="row-btns" style="margin-top:14px"><button class="btn yellow" data-go="sug">' + I.spark + ' Sugerencias</button><button class="btn ghost" data-go="banco">' + I.plus + ' Añadir lugar</button></div></div>';
     }
-    if (list.length) {
+    if (list.length || hasGhost) {
       html += '<div class="timeline">';
       var prevMine = null;
-      list.forEach(function (b, i) {
+      var ghosts = ST.unseen().filter(function (n) { return n.ghost && n.ghost.day === day; });
+      var items = list.slice();
+      ghosts.forEach(function (g) { items.push({ ghost: g, start: g.ghost.start }); });
+      items.sort(function (x, y) { return C.toMin(x.start) - C.toMin(y.start); });
+      items.forEach(function (b, i) {
+        if (b.ghost) { html += ghostCard(b.ghost); return; }
         var mine = C.covers(b.who, fam);
         var warns = (mine ? an.byId[b.id] : anO && anO.byId[b.id]) || [];
         if (prevMine && mine) {
@@ -261,6 +291,11 @@
     $('#app').innerHTML = html;
     $('#showOther').onchange = function (e) { ST.setUi({ showOther: e.target.checked }); };
   }
+  function ghostCard(n) {
+    var g = n.ghost;
+    return '<div class="blk"><div class="t">' + esc(g.start) + '</div><div class="card bcard pend ghost">' + pendBanner([n]) +
+      '<div class="bi"><div class="bt" style="text-decoration:line-through">' + esc(g.title) + '</div><div class="bm">Quitado del programa</div></div></div></div>';
+  }
   function rutaDia(day) {
     var pts = C.lineBlocks(ST.blocks(), day, myFam()).filter(function (b) { return b.status !== 'done' && b.n != null; })
       .map(function (b) { return C.ficha(b.n).ubicacion; });
@@ -269,12 +304,14 @@
   function blockCard(b, warns) {
     var f = b.n != null ? C.ficha(b.n) : null;
     var s = C.blockStart(b), e = C.blockEnd(b);
-    var cls = 'card bcard' + (b.status === 'done' ? ' done' : '') + (b.type === 'fixed' ? ' fixed' : '');
+    var pend = ST.pendingForBlock(b.id);
+    var cls = 'card bcard' + (b.status === 'done' ? ' done' : '') + (b.type === 'fixed' ? ' fixed' : '') + (pend.length ? ' pend' : '');
     var meta = [];
     if (f) meta.push(esc(f.zona));
     if (b.booking && b.booking.ok) meta.push('<span style="color:var(--book);font-weight:700">Reservado</span>');
     var html = '<div class="blk"><div class="t">' + C.fmt(s) + '<small>' + C.fmt(e) + '</small></div>' +
       '<div class="' + cls + '" style="' + (f ? 'border-left-color:' + catColor(f) : '') + '" data-block="' + b.id + '">' +
+      pendBanner(pend) +
       (f && thumb(f) ? '<img class="th" loading="lazy" src="' + thumb(f) + '" alt="">' : '') +
       '<div class="bi"><div class="bt">' + esc(C.blockTitle(b)) + '</div><div class="bm">' + whoChip(b.who) + meta.join(' · ') + '</div>';
     if (b.note) html += '<div class="small muted" style="margin-top:3px">' + esc(b.note) + '</div>';
@@ -719,6 +756,7 @@
     var x;
     if ((x = t.closest('[data-ficha]'))) { ev.preventDefault(); openFicha(+x.getAttribute('data-ficha')); return; }
     if ((x = t.closest('[data-add]'))) { addPlace(+x.getAttribute('data-add')); return; }
+    if ((x = t.closest('[data-ack]'))) { ST.ack(x.getAttribute('data-ack').split(',')); return; }
     if ((x = t.closest('[data-done]'))) {
       var b = S.blocks[x.getAttribute('data-done')];
       if (b && ST.canEdit(b)) {

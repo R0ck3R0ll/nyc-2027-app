@@ -26,10 +26,11 @@
     members: saved.members || {},       // uid -> { name, fam }
     claims: saved.claims || {},         // nombre normalizado -> { uid, name }
     notifs: saved.notifs || [],         // avisos de cambios (los últimos)
-    ui: Object.assign({ view: 'programa', day: null, showOther: false, nivel: 'equilibrado', sugMine: false, seenAt: 0,
+    ui: Object.assign({ view: 'programa', day: null, showOther: false, nivel: 'equilibrado', sugMine: false, ack: {}, ackBefore: 0,
                         banco: { q: '', cat: '', clas: '', estado: '', dia: '' } }, saved.ui || {}),
     sync: { status: 'off', error: '' }
   };
+  if (S.me && !S.ui.ackBefore) S.ui.ackBefore = Date.now();
   // perfiles de versiones anteriores: solo valen los nombres de la lista
   if (S.me && window.CORE) {
     var pp = window.CORE.persona(S.me.name);
@@ -62,9 +63,14 @@
     var d = C().TRIP.dias[b.day - 1];
     return '«' + C().blockTitle(b) + '» el ' + (d ? d.corto : '') + ' a las ' + b.start;
   }
-  function notify(who, txt, b) {
+  // who: a quién afecta · blocks: bloques implicados (se resaltan) · ghost: bloque quitado (se muestra tachado)
+  function notify(who, txt, blocks, ghost) {
     if (!S.me) return;
-    var n = { id: uid('n'), at: Date.now(), by: S.me.name, byFam: S.me.fam, who: who, txt: txt, day: b ? b.day : null, blockId: b ? b.id : null };
+    blocks = (blocks || []).filter(Boolean);
+    var first = blocks[0] || ghost || null;
+    var n = { id: uid('n'), at: Date.now(), by: S.me.name, byFam: S.me.fam, who: who, txt: txt, day: first ? first.day : null,
+      blockId: blocks[0] ? blocks[0].id : null, blockIds: blocks.map(function (b) { return b.id; }) };
+    if (ghost) n.ghost = { day: ghost.day, start: ghost.start, title: C().blockTitle(ghost), n: ghost.n != null ? ghost.n : null };
     S.notifs.unshift(n);
     var be = backend(); if (be) be.addNotif(n);
   }
@@ -113,8 +119,8 @@
     /* Operaciones del programa (con aviso a los afectados) */
     addBlocks: function (list, who, intro) {
       var out = list.map(function (b) { return STORE._put(Object.assign({}, b, { who: who })); });
-      if (out.length === 1) notify(who, 'ha añadido ' + desc(out[0]) + scopeTxt(who), out[0]);
-      else if (out.length) notify(who, (intro || 'ha añadido ' + out.length + ' planes') + ' el ' + C().TRIP.dias[out[0].day - 1].corto + scopeTxt(who), out[0]);
+      if (out.length === 1) notify(who, 'ha añadido ' + desc(out[0]) + scopeTxt(who), out);
+      else if (out.length) notify(who, (intro || 'ha añadido ' + out.length + ' planes') + ' el ' + C().TRIP.dias[out[0].day - 1].corto + scopeTxt(who), out);
       emit();
       return out;
     },
@@ -124,34 +130,56 @@
       var ch = changeTxt(orig, changed);
       if (orig.who === 'all' && scope === 'mine') {
         // el bloque original se queda para la otra familia y se crea una copia cambiada para la mía
-        STORE._put(Object.assign({}, orig, { who: other }));
+        var ob = STORE._put(Object.assign({}, orig, { who: other }));
         var copy = Object.assign({}, changed, { id: null, who: me });
         var nb = STORE._put(copy);
-        notify('all', 'ha cambiado ' + desc(orig) + ' solo para su familia' + (ch ? ': ' + ch : ''), nb);
+        notify('all', 'ha cambiado ' + desc(orig) + ' solo para su familia' + (ch ? ': ' + ch : ''), [nb, ob]);
       } else {
         var b = STORE._put(changed);
-        if (ch) notify(b.who, 'ha cambiado ' + desc(orig) + ': ' + ch + scopeTxt(b.who), b);
+        if (ch) notify(b.who, 'ha cambiado ' + desc(orig) + ': ' + ch + scopeTxt(b.who), [b]);
       }
       emit();
     },
     removeBlock: function (orig, scope) {
       if (orig.who === 'all' && scope === 'mine') {
-        STORE._put(Object.assign({}, orig, { who: STORE.otherFam() }));
-        notify('all', 'ha quitado ' + desc(orig) + ' solo para su familia', orig);
+        var kept = STORE._put(Object.assign({}, orig, { who: STORE.otherFam() }));
+        notify('all', 'ha quitado ' + desc(orig) + ' solo para su familia', [kept], orig);
       } else {
         STORE._del(orig.id);
-        notify(orig.who, 'ha quitado ' + desc(orig) + scopeTxt(orig.who), orig);
+        notify(orig.who, 'ha quitado ' + desc(orig) + scopeTxt(orig.who), [], orig);
       }
       emit();
     },
 
     setUi: function (patch) { Object.assign(S.ui, patch); emit(); },
-    setMe: function (me) { S.me = me; emit(); },
+    setMe: function (me) {
+      S.me = me;
+      // lo anterior a la primera entrada no queda pendiente de aceptar
+      if (me && !S.ui.ackBefore) S.ui.ackBefore = Date.now();
+      emit();
+    },
+    // Avisos de cambios hechos por otros que me afectan y que aún no he aceptado
     unseen: function () {
       if (!S.me) return [];
       return S.notifs.filter(function (n) {
-        return n.at > (S.ui.seenAt || 0) && n.by !== S.me.name && window.CORE.covers(n.who, S.me.fam);
+        return n.at > (S.ui.ackBefore || 0) && !(S.ui.ack || {})[n.id] && n.by !== S.me.name && window.CORE.covers(n.who, S.me.fam);
       });
+    },
+    pendingForBlock: function (id) {
+      return STORE.unseen().filter(function (n) { return (n.blockIds || [n.blockId]).indexOf(id) >= 0; });
+    },
+    pendingDays: function () {
+      var d = {};
+      STORE.unseen().forEach(function (n) { if (n.day) d[n.day] = (d[n.day] || 0) + 1; });
+      return d;
+    },
+    ack: function (ids) {
+      S.ui.ack = S.ui.ack || {};
+      [].concat(ids).forEach(function (id) { S.ui.ack[id] = Date.now(); });
+      // limpiar aceptaciones muy antiguas que ya no están en la lista
+      var keep = {}; S.notifs.forEach(function (n) { keep[n.id] = 1; });
+      Object.keys(S.ui.ack).forEach(function (k) { if (!keep[k] && Date.now() - S.ui.ack[k] > 7 * 864e5) delete S.ui.ack[k]; });
+      emit();
     },
     mine: function () {
       if (!S.me) return [];

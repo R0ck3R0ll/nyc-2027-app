@@ -46,7 +46,7 @@ service cloud.firestore {
       match /notifs/{id} {
         allow read: if signedIn();
         allow create: if signedIn() && tripAfter(t) && id.size() <= 40
-          && request.resource.data.keys().hasOnly(['id', 'at', 'by', 'byFam', 'who', 'txt', 'day', 'blockId'])
+          && request.resource.data.keys().hasOnly(['id', 'at', 'by', 'byFam', 'who', 'txt', 'day', 'blockId', 'blockIds', 'ghost'])
           && request.resource.data.txt is string && request.resource.data.txt.size() <= 500
           && request.resource.data.who in ['all', 'A', 'B'];
         allow update, delete: if false;
