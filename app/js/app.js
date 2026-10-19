@@ -461,10 +461,10 @@
     var b = S.ui.banco;
     var fam = myFam();
     var st = C.placeState(ST.blocks(), fam);
-    var html = header('Lugares', '79 fichas · banco de opciones');
+    var html = header('Lugares', '79 fichas');
     html += '<main><div class="search"><input type="search" id="q" placeholder="Buscar: pizza, mirador, Brooklyn…" value="' + esc(b.q) + '"></div>';
-    html += '<div class="chips" style="margin-top:8px">' + ['', 'I', 'B'].map(function (c) { return '<button class="chip ' + (b.clas === c ? 'on' : '') + '" data-clas="' + c + '">' + (c === '' ? 'Todas' : c === 'I' ? 'Imprescindibles' : 'Banco') + '</button>'; }).join('') +
-      [['', 'Cualquier estado'], ['libre', 'Por hacer'], ['programado', 'Programadas'], ['hecho', 'Hechas']].map(function (x) { return '<button class="chip ' + (b.estado === x[0] ? 'on' : '') + '" data-est="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    html += '<div class="fchips" style="margin-top:8px">' + ['', 'I', 'B'].map(function (c) { return '<button class="chip ' + (b.clas === c ? 'on' : '') + '" data-clas="' + c + '">' + (c === '' ? 'Todas' : c === 'I' ? 'Imprescindibles' : 'Otras opciones') + '</button>'; }).join('') + '</div>' +
+      '<div class="fchips">' + [['', 'Cualquier estado'], ['libre', 'Por hacer'], ['programado', 'Programadas'], ['hecho', 'Hechas']].map(function (x) { return '<button class="chip ' + (b.estado === x[0] ? 'on' : '') + '" data-est="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
     html += '<div class="filters"><select id="cat"><option value="">Todas las categorías</option>' + CATS.map(function (c) { return '<option ' + (b.cat === c ? 'selected' : '') + '>' + c + '</option>'; }).join('') + '</select>' +
       '<select id="dia"><option value="">Cualquier día</option>' + DIAS.map(function (d) { return '<option value="' + d.n + '"' + (String(b.dia) === String(d.n) ? ' selected' : '') + '>Abierto el ' + d.corto + '</option>'; }).join('') + '</select></div>';
     var q = b.q.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
