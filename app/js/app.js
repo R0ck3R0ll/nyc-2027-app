@@ -67,8 +67,8 @@
     var entry = { bg: bg, sh: sh };
     sheetStack.push(entry);
     history.pushState({ sheet: sheetStack.length }, '');
-    bg.onclick = function () { history.back(); };
-    sh.querySelector('.x').onclick = function () { history.back(); };
+    bg.onclick = function () { closeSheet(); };
+    sh.querySelector('.x').onclick = function () { closeSheet(); };
     if (onMount) onMount(sh.querySelector('.body'), entry);
     return entry;
   }
@@ -76,9 +76,22 @@
     var e = sheetStack.pop();
     if (e) { e.bg.remove(); e.sh.remove(); if (e.onClose) e.onClose(); }
   }
-  window.addEventListener('popstate', function () { if (sheetStack.length) closeTop(); });
-  function closeAllSheets() { while (sheetStack.length) { closeTop(); history.back(); } }
-  function closeSheet() { history.back(); }
+  // Cerrar desde la app: se cierra al momento y se ignora el «atrás» que provoca
+  var ignorePop = 0;
+  window.addEventListener('popstate', function () {
+    if (ignorePop > 0) { ignorePop--; return; }
+    if (sheetStack.length) closeTop();
+  });
+  function closeAllSheets() {
+    var k = sheetStack.length;
+    if (!k) return;
+    while (sheetStack.length) closeTop();
+    ignorePop++; history.go(-k);
+  }
+  function closeSheet() {
+    if (!sheetStack.length) return;
+    closeTop(); ignorePop++; history.back();
+  }
 
   /* ---------- cabecera y pestañas ---------- */
   var TABS = [
@@ -589,20 +602,31 @@
   }
 
   /* añadir una ficha a un día */
+  function sortedBy(list) { return list.sort(function (x, y) { return x.day - y.day || C.blockStart(x) - C.blockStart(y); }); }
+  function confirmSheet(title, sub, lines, okLabel, onOk) {
+    openSheet(title, (sub ? '<p style="margin:0 0 6px"><b>' + esc(sub) + '</b></p>' : '') + lines.map(function (l) { return '<div class="warn w-warn">' + esc(l) + '</div>'; }).join('') +
+      '<div class="actionbar"><button class="btn ghost" id="cf-no">Cancelar</button><button class="btn yellow" id="cf-si">' + esc(okLabel) + '</button></div>', function (el) {
+      $('#cf-no', el).onclick = function () { closeSheet(); };
+      $('#cf-si', el).onclick = function () { closeSheet(); setTimeout(onOk, 30); };
+    });
+  }
+  // Al añadir para todo el grupo algo que la otra familia ya tiene programado
+  function friendsCheck(n, scope, onOk) {
+    var f = C.ficha(n);
+    if (scope !== 'all' || f.categoria === 'Restauración') { onOk(); return; }
+    var other = ST.otherFam();
+    var theirs = sortedBy(ST.blocks().filter(function (b) { return b.n === n && b.status !== 'skip' && b.who === other; }));
+    if (!theirs.length) { onOk(); return; }
+    confirmSheet('¿Añadirlo para todo el grupo?', f.nombre, theirs.map(function (b) { return 'Tus amigos ya lo tienen programado el ' + DIAS[b.day - 1].corto + ' a las ' + b.start; }),
+      'Añadir igualmente', onOk);
+  }
   function addPlace(n, presetDay, confirmed) {
     var f = C.ficha(n);
-    var ya = ST.blocks().filter(function (b) { return b.n === n && b.status !== 'skip'; })
-      .sort(function (x, y) { return x.day - y.day || C.blockStart(x) - C.blockStart(y); });
+    var rep = f.categoria !== 'Restauración';
+    var ya = rep ? sortedBy(ST.blocks().filter(function (b) { return b.n === n && b.status !== 'skip' && C.covers(b.who, myFam()); })) : [];
     if (ya.length && !confirmed) {
-      var lines = ya.map(function (b) {
-        return 'Ya programado el ' + DIAS[b.day - 1].corto + ' a las ' + esc(b.start) + (b.status === 'done' ? ' (hecho)' : '') +
-          (b.who === 'all' ? '' : b.who === myFam() ? ' · mi familia' : ' · otra familia');
-      });
-      openSheet('¿Programarlo otra vez?', '<p style="margin:0 0 6px"><b>' + esc(f.nombre) + '</b></p>' + lines.map(function (l) { return '<div class="warn w-warn">' + l + '</div>'; }).join('') +
-        '<div class="actionbar"><button class="btn ghost" id="ya-no">Cancelar</button><button class="btn yellow" id="ya-si">Programar igualmente</button></div>', function (el) {
-        $('#ya-no', el).onclick = function () { closeSheet(); };
-        $('#ya-si', el).onclick = function () { closeSheet(); setTimeout(function () { addPlace(n, presetDay, true); }, 30); };
-      });
+      confirmSheet('¿Programarlo otra vez?', f.nombre, ya.map(function (b) { return 'Ya programado el ' + DIAS[b.day - 1].corto + ' a las ' + b.start; }),
+        'Programar igualmente', function () { addPlace(n, presetDay, true); });
       return;
     }
     var fam = myFam();
@@ -643,11 +667,15 @@
       draw();
       el.querySelectorAll('[data-ad]').forEach(function (bt) { bt.onclick = function () {
         var t = tmp(); delete t.id;
-        ST.addBlocks([t], whoFor(bt.getAttribute('data-ad')));
+        var sc = bt.getAttribute('data-ad');
+        friendsCheck(n, sc, function () { doAdd(t, sc); });
+      }; });
+      function doAdd(t, sc) {
+        ST.addBlocks([t], whoFor(sc));
         closeAllSheets();
         ST.setUi({ view: 'programa', day: day });
         toast('Añadido al ' + DIAS[day - 1].corto + ' a las ' + t.start);
-      }; });
+      }
     });
   }
 
@@ -709,9 +737,9 @@
       b.onclick = function () {
         var n = +b.dataset.now;
         var nb = { day: day, n: n, start: b.dataset.s, dur: C.ficha(n).plan.dur, status: 'plan', type: 'place' };
-        var ya = ST.blocks().filter(function (x) { return x.n === n && x.status !== 'skip'; });
-        if (ya.length && !confirm('Ya programado el ' + DIAS[ya[0].day - 1].corto + ' a las ' + ya[0].start + '. ¿Añadirlo también ahora?')) return;
-        askScope('«' + C.ficha(n).nombre + '» a las ' + b.dataset.s, function (sc) { ST.addBlocks([nb], whoFor(sc)); toast('Añadido a las ' + b.dataset.s); });
+        askScope('«' + C.ficha(n).nombre + '» a las ' + b.dataset.s, function (sc) {
+          friendsCheck(n, sc, function () { ST.addBlocks([nb], whoFor(sc)); toast('Añadido a las ' + b.dataset.s); });
+        });
       };
     });
   }

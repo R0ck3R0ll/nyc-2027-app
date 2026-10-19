@@ -1,7 +1,7 @@
 /* Service worker: la app funciona sin conexión.
    - Estructura de la app (HTML, JS, CSS, datos): primero la red, si no hay, la copia guardada.
    - Fotos y librerías de Firebase: primero la copia guardada. */
-const VERSION = 'nyc27-v5';
+const VERSION = 'nyc27-v6';
 const SHELL = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'js/config.js', 'js/core.js', 'js/store.js',
   'js/app.js', 'js/sync.js', 'js/sugerencias.js', 'data/fichas.js', 'icons/icon-192.png'];
 

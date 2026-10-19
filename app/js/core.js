@@ -227,8 +227,8 @@
             else if (/basta|sobra/.test(f.excluye_nota || '')) add(b, 'info', 'También está «' + BYNUM[x].nombre + '» el ' + TRIP.dias[o.day - 1].corto + nota, { n: x });
           });
         });
-        // repetidos
-        all.forEach(function (o) {
+        // repetidos (no aplica a restaurantes: se puede volver)
+        if (f.categoria !== 'Restauración') all.forEach(function (o) {
           if (o.id === b.id || o.n !== b.n) return;
           if (fam !== 'all' && !covers(o.who, fam)) return;
           if (!(covers(o.who, b.who === 'all' ? 'all' : b.who) || covers(b.who, o.who === 'all' ? 'all' : o.who))) return;
