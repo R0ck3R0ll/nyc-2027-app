@@ -140,4 +140,7 @@ META = {
              meal=["com", "cen"]),
     79: dict(dur=90,  h=ov("11:30-23:00", {1: "11:30-24:00", 2: "11:00-24:00", 3: "11:00-23:00"}),
              meal=["com", "cen"]),
+    80: dict(dur=105, h={1: None, 2: "10:30-17:00", 3: "10:30-17:00", 4: None, 5: "10:30-17:00",
+                         6: "10:30-17:00", 7: "10:30-17:00"},
+             notas={3: "Salas históricas gratis de 15:00 a 17:00 (sin exposiciones)", 5: "Salas históricas gratis de 15:00 a 17:00 (sin exposiciones)"}),
 }

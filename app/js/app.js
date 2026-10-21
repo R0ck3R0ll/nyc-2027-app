@@ -469,7 +469,7 @@
     var b = S.ui.banco;
     var fam = myFam();
     var st = C.placeState(ST.blocks(), fam);
-    var html = header('Lugares', '79 fichas');
+    var html = header('Lugares', '80 fichas');
     html += '<main><div class="search"><input type="search" id="q" placeholder="Buscar: pizza, mirador, Brooklyn…" value="' + esc(b.q) + '"></div>';
     html += '<div class="fchips" style="margin-top:8px">' + ['', 'I', 'B'].map(function (c) { return '<button class="chip ' + (b.clas === c ? 'on' : '') + '" data-clas="' + c + '">' + (c === '' ? 'Todas' : c === 'I' ? 'Imprescindibles' : 'Otras opciones') + '</button>'; }).join('') + '</div>' +
       '<div class="fchips">' + [['', 'Cualquier estado'], ['libre', 'Por hacer'], ['programado', 'Programadas'], ['hecho', 'Hechas']].map(function (x) { return '<button class="chip ' + (b.estado === x[0] ? 'on' : '') + '" data-est="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
@@ -578,7 +578,7 @@
         return '<figure><img loading="lazy" src="' + img(g[0]) + '" alt=""><figcaption>' + esc(g[1]) + (c ? '<br>© ' + esc(c.autor) + ' · ' + esc(c.licencia) : '') + '</figcaption></figure>';
       }).join('') + '</div></div>';
     }
-    h += '<p class="small muted" style="margin-top:16px">Ficha ' + f.num + ' de 79</p>';
+    h += '<p class="small muted" style="margin-top:16px">Ficha ' + f.num + ' de 80</p>';
     var own = C.sortBlocks(ST.blocks().filter(function (b) { return b.n === n && b.status !== 'skip' && ST.canEdit(b); }))
       .sort(function (x, y) { return x.day - y.day || C.blockStart(x) - C.blockStart(y); });
     if (own.length) h += '<div class="actionbar"><button class="btn ghost" id="fi-del" style="color:var(--err)">Quitar del programa</button><button class="btn yellow" id="fi-mod">Modificar programación</button></div>';

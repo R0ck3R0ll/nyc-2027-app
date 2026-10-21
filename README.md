@@ -9,7 +9,7 @@ Funciona sin conexión y sincroniza el programa entre todos los móviles con Fir
 |---|---|
 | Programa | Días 1–7, vacíos hasta confirmar una sugerencia o añadir lugares. Avisos de tiempos, horarios, excluyentes y reservas; carga del día; «Ir» y «Ruta del día» abren Google Maps |
 | Sugerencias | Itinerarios de día completo (días 2–6) y de medio día (1 y 7) en tres niveles; quitan lo ya visitado o programado y respetan lo que ya hay en el día |
-| Lugares | Banco de las 79 fichas con filtros (clasificación, estado, categoría, abierto tal día) |
+| Lugares | Banco de las 80 fichas con filtros (clasificación, estado, categoría, abierto tal día) |
 | Ahora | Qué se puede hacer desde donde estáis con el tiempo libre hasta el siguiente compromiso |
 | Viaje | Hotel, vuelos, reservas del programa, grupo e invitación, fotos sin conexión |
 

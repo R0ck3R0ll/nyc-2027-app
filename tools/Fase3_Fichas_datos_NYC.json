@@ -79,7 +79,8 @@
   "76": "Keens Steakhouse",
   "77": "Chelsea Market",
   "78": "Time Out Market",
-  "79": "Carmine's"
+  "79": "Carmine's",
+  "80": "The Morgan Library + Museum"
  },
  "fichas": [
   {
@@ -337,7 +338,8 @@
    },
    "combina": [
     56,
-    27
+    27,
+    80
    ],
    "excluye": [
     1,
@@ -481,7 +483,8 @@
    },
    "combina": [
     8,
-    29
+    29,
+    80
    ],
    "excluye": [
     1,
@@ -1124,7 +1127,8 @@
    "combina": [
     3,
     29,
-    27
+    27,
+    80
    ],
    "excluye": [],
    "excluye_nota": "",
@@ -9474,7 +9478,8 @@
    },
    "combina": [
     56,
-    2
+    2,
+    80
    ],
    "excluye": [],
    "excluye_nota": "",
@@ -9795,6 +9800,151 @@
    "fuentes": [
     "carminesnyc.com (carta, reservas)",
     "Google (horario, valoraciones)"
+   ]
+  },
+  {
+   "num": 80,
+   "f1": null,
+   "clas": "B",
+   "categoria": "Museos",
+   "zona": "Murray Hill · Madison Ave",
+   "nombre": "The Morgan Library + Museum",
+   "subtitulo": "La biblioteca privada de J. P. Morgan: salas de techos pintados, manuscritos y una Biblia de Gutenberg",
+   "tags": [
+    "1,5–2 h",
+    "$25 pp",
+    "A pie 25'"
+   ],
+   "que_es": [
+    "El museo nació como la <b>biblioteca privada del banquero J. P. Morgan</b>, construida en 1906 junto a su casa. Se conservan las salas originales: la <b>Rotonda</b>, la <b>sala de su estudio</b>, con paredes de damasco rojo, y la <b>sala este</b>, con tres pisos de estanterías bajo un techo pintado, donde suele exponerse una <b>Biblia de Gutenberg</b>.",
+    "Alrededor, un conjunto de galerías y un atrio de cristal (Gilbert Court, de Renzo Piano, 2006) con exposiciones temporales de manuscritos, dibujos y libros raros. Es un museo pequeño y tranquilo: se ve bien en menos de dos horas."
+   ],
+   "practica": [
+    [
+     "Duración",
+     "1,5–2 h",
+     "las reseñas coinciden: 1–2 h"
+    ],
+    [
+     "Horario",
+     "Mar–jue y sáb–dom 10:30–17:00 · viernes 10:30–20:00",
+     "<b>cerrado los lunes y el 1 de enero</b>; confirmar en themorgan.org"
+    ],
+    [
+     "Dirección",
+     "225 Madison Ave, entre las calles 36 y 37",
+     ""
+    ],
+    [
+     "Desde el hotel",
+     "A pie 25 min",
+     "o metro 7 de Times Sq a Grand Central y 10 min a pie"
+    ],
+    [
+     "Precio",
+     "$25 adulto · $13 estudiante con carné · gratis hasta 12 años",
+     "13+ pagan adulto → $139–175 los 7, sin gastos de gestión online"
+    ],
+    [
+     "Gratis",
+     "Salas históricas de la Biblioteca: domingo y martes 15:00–17:00",
+     "en el viaje, dom 3 y mar 5; no incluye las exposiciones temporales"
+    ],
+    [
+     "Café y tienda",
+     "Morgan Café y Morgan Shop",
+     "se entra sin pagar la entrada del museo"
+    ]
+   ],
+   "secciones": [
+    {
+     "titulo": "Recorrido",
+     "tipo": "route",
+     "items": [
+      "<b>Rotonda y sala del estudio</b> — la entrada original de 1906 y el despacho de Morgan, con paredes rojas",
+      "<b>Sala este</b> — la biblioteca de tres pisos y la Biblia de Gutenberg",
+      "<b>Gilbert Court</b> — el atrio de cristal que une los edificios",
+      "<b>Exposiciones temporales</b> — las galerías del edificio nuevo"
+     ]
+    },
+    {
+     "titulo": "Exposiciones previstas en enero de 2027",
+     "tipo": "p",
+     "items": [
+      "<b>Rembrandt's Lions: Art and Exile in the Dutch Republic</b> (hasta el 31 de enero) · <b>Fantasy and Reality: The Art of Johan Tobias Sergel</b> (hasta el 31 de enero) · <b>Late Medieval European Blockbooks: The First Printed Picture Books</b> (hasta el 16 de mayo) · <b>Ragtime: Cakewalk in Pianoland</b> (hasta el 13 de junio).",
+      "Fechas del calendario anunciado en noviembre de 2025; pueden cambiar."
+     ]
+    }
+   ],
+   "aviso": [
+    "<b>Solo sirven sáb 2, dom 3, mar 5, mié 6 y jue 7.</b> El viernes 1 (Año Nuevo) y el lunes 4 está cerrado.",
+    "<b>La entrada gratuita de los viernes</b> (17:00–20:00, con reserva) no cae en el viaje: el único viernes es el 1, cerrado.",
+    "<b>Tarifa de estudiante:</b> con carné válido; confirmar en taquilla si aceptan el del colegio español antes de contar con ella."
+   ],
+   "reserva": {
+    "tipo": "fecha",
+    "dias": [
+     2,
+     3,
+     5,
+     6,
+     7
+    ],
+    "efectiva": null,
+    "nota": "Entrada con fecha, recomendada pero no obligatoria · online con gastos de gestión",
+    "enlaces": [
+     [
+      "Entradas y horarios en themorgan.org",
+      "https://www.themorgan.org/visit"
+     ]
+    ]
+   },
+   "valoraciones": {
+    "fuente": "Tripadvisor",
+    "nota": 4.7,
+    "num": 2225,
+    "pos": [
+     "Las salas de la Biblioteca (Rotonda y sala este), de lo más bonito de la ciudad",
+     "Exposiciones temporales muy bien valoradas",
+     "Se ve en una o dos horas y casi sin gente, sobre todo temprano"
+    ],
+    "neg": [
+     "Entrada cara para el tamaño del museo ($25–28,50)",
+     "Alguna galería cerrada o en obras en ciertas visitas",
+     "El café se llena y no a todos les compensa"
+    ]
+   },
+   "combina": [
+    8,
+    3,
+    2,
+    76
+   ],
+   "excluye": [],
+   "excluye_nota": "",
+   "ubicacion": {
+    "nombre": "The Morgan Library & Museum",
+    "direccion": "225 Madison Ave, New York, NY 10016",
+    "lat": 40.74924,
+    "lng": -73.98146
+   },
+   "fotos": {
+    "hero": "f80_hero",
+    "alt": "La entrada de la biblioteca de Morgan, en la calle 36",
+    "gal": [
+     [
+      "f80_g1",
+      "La sala este, con sus tres pisos de estanterías"
+     ],
+     [
+      "f80_g2",
+      "La sala del estudio de Morgan, con las paredes rojas"
+     ]
+    ]
+   },
+   "fuentes": [
+    "themorgan.org (horario, precios, exposiciones)",
+    "Tripadvisor (valoraciones)"
    ]
   }
  ]
