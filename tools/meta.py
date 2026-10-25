@@ -143,4 +143,6 @@ META = {
     80: dict(dur=105, h={1: None, 2: "10:30-17:00", 3: "10:30-17:00", 4: None, 5: "10:30-17:00",
                          6: "10:30-17:00", 7: "10:30-17:00"},
              notas={3: "Salas históricas gratis de 15:00 a 17:00 (sin exposiciones)", 5: "Salas históricas gratis de 15:00 a 17:00 (sin exposiciones)"}),
+    81: dict(dur=50, h="08:00-23:00",
+             notas={1: "El 1 de enero el horario puede ser distinto; confirmar"}),
 }

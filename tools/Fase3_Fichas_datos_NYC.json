@@ -80,7 +80,8 @@
   "77": "Chelsea Market",
   "78": "Time Out Market",
   "79": "Carmine's",
-  "80": "The Morgan Library + Museum"
+  "80": "The Morgan Library + Museum",
+  "81": "Target Herald Square"
  },
  "fichas": [
   {
@@ -9946,6 +9947,104 @@
     "themorgan.org (horario, precios, exposiciones)",
     "Tripadvisor (valoraciones)"
    ]
+  },
+  {
+   "num": 81,
+   "f1": null,
+   "clas": "B",
+   "categoria": "Compras",
+   "zona": "Herald Square · calle 34",
+   "nombre": "Target Herald Square",
+   "subtitulo": "Dos plantas de Target en pleno Midtown, con camisetas y recuerdos de Nueva York, belleza y comida para llevar",
+   "tags": [
+    "45'–1 h",
+    "Entrada libre",
+    "A pie 20'"
+   ],
+   "que_es": [
+    "Tienda <b>Target de formato pequeño</b> (unos 43.000 sq ft, dos plantas) frente a Macy's, con entradas por las calles 34 y 33. Es la más grande de las céntricas de Manhattan y la que mejor equilibra tamaño y cercanía al hotel.",
+    "Tiene ropa de adulto, hombre y niño, con marcas exclusivas de esta tienda; un departamento grande de <b>belleza</b>; electrónica; <b>alimentación fresca y comida para llevar</b>; y artículos para turistas, como camisetas y peluches de Nueva York. Dentro hay una <b>farmacia CVS</b> y mostrador de activación de móviles."
+   ],
+   "practica": [
+    [
+     "Duración",
+     "45 min–1 h",
+     "más si se busca ropa"
+    ],
+    [
+     "Horario",
+     "Todos los días 8:00–23:00",
+     "<b>el 1 de enero puede ser distinto</b>; confirmar en target.com"
+    ],
+    [
+     "Dirección",
+     "112 W 34th St, entre la 6th y la 7th Ave",
+     "entradas por la calle 34 y por la 33; frente a Macy's"
+    ],
+    [
+     "Desde el hotel",
+     "A pie 20 min",
+     "o metro N/Q/R/W de Times Sq a 34 St–Herald Sq, ~10 min"
+    ],
+    [
+     "Precio",
+     "Entrada libre",
+     "precios de Target, sin gastos de gestión"
+    ],
+    [
+     "Servicios",
+     "CVS, recogida de pedidos online y entrega el mismo día en Manhattan",
+     "móvil o tarjeta: pago sin contacto"
+    ],
+    [
+     "Contacto",
+     "<a href=\"tel:+16469684739\">+1 646 968 4739</a>",
+     "target.com/sl/manhattan-herald-square/3277"
+    ]
+   ],
+   "secciones": [
+    {
+     "titulo": "Qué mirar",
+     "tipo": "route",
+     "items": [
+      "<b>Planta de entrada</b> — alimentación, comida para llevar, belleza y farmacia CVS",
+      "<b>Planta inferior</b> — ropa, hogar y electrónica",
+      "<b>Recuerdos de Nueva York</b> — camisetas, peluches y artículos de artistas locales, a precios más bajos que en Times Square"
+     ]
+    }
+   ],
+   "aviso": [
+    "<b>Impuestos:</b> los precios se marcan sin impuesto (8,875 % en Nueva York); la ropa y el calzado de menos de $110 por prenda están exentos.",
+    "<b>Surtido reducido:</b> es una tienda pequeña; el surtido completo (hogar, juguetes, electrónica) solo está en la de East Harlem."
+   ],
+   "reserva": {
+    "tipo": "no",
+    "dias": null,
+    "efectiva": null,
+    "nota": "Entrada libre, sin reserva",
+    "enlaces": [
+     [
+      "Tienda en target.com",
+      "https://www.target.com/sl/manhattan-herald-square/3277"
+     ]
+    ]
+   },
+   "valoraciones": null,
+   "combina": [
+    56,
+    2,
+    76,
+    80
+   ],
+   "excluye": [],
+   "excluye_nota": "",
+   "ubicacion": {
+    "nombre": "Target Herald Square",
+    "direccion": "112 W 34th St, New York, NY 10120",
+    "lat": 40.7503,
+    "lng": -73.9894
+   },
+   "fotos": null
   }
  ]
 }
