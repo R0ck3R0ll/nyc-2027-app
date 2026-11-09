@@ -81,7 +81,8 @@
   "78": "Time Out Market",
   "79": "Carmine's",
   "80": "The Morgan Library + Museum",
-  "81": "Target Herald Square"
+  "81": "Target Herald Square",
+  "82": "Trump Tower"
  },
  "fichas": [
   {
@@ -1004,7 +1005,8 @@
     26,
     27,
     44,
-    54
+    54,
+    82
    ],
    "excluye": [],
    "excluye_nota": "",
@@ -2929,7 +2931,8 @@
     17,
     20,
     68,
-    27
+    27,
+    82
    ],
    "excluye": [],
    "excluye_nota": "",
@@ -3383,7 +3386,8 @@
     26,
     57,
     24,
-    23
+    23,
+    82
    ],
    "excluye": [],
    "excluye_nota": "",
@@ -7481,7 +7485,8 @@
     27,
     23,
     24,
-    26
+    26,
+    82
    ],
    "excluye": [],
    "excluye_nota": "",
@@ -10045,6 +10050,140 @@
     "lng": -73.9894
    },
    "fotos": null
+  },
+  {
+   "num": 82,
+   "f1": null,
+   "clas": "B",
+   "categoria": "Iconos y paseos",
+   "zona": "Midtown East · 5th Ave",
+   "nombre": "Trump Tower",
+   "subtitulo": "El rascacielos de la 5th Avenue con un atrio de mármol rosa y una cascada interior, de entrada libre",
+   "tags": [
+    "20–30 min",
+    "Gratis",
+    "A pie 15'"
+   ],
+   "que_es": [
+    "Rascacielos de 58 plantas en la 5th Avenue, entre las calles 56 y 57, inaugurado en 1983 y sede de la Trump Organization. Solo se visita la parte pública: el <b>atrio de cinco plantas</b>, revestido de mármol rosa Breccia Pernice, con una <b>cascada</b> de unos 18 m que ocupa una pared, balcones y escaleras mecánicas con espejos.",
+    "Alrededor del atrio hay una tienda de recuerdos con productos de la marca Trump, un Starbucks en la segunda planta, una cafetería y un restaurante. Es una parada corta que encaja en un paseo por la 5th Avenue: Tiffany está en el edificio de al lado y Central Park, a tres manzanas."
+   ],
+   "practica": [
+    [
+     "Duración",
+     "20–30 min",
+     "10 min si solo se mira el atrio; más con un café"
+    ],
+    [
+     "Horario",
+     "Todos los días 8:00–22:00",
+     "atrio y zonas públicas; cada tienda y restaurante tiene su propio horario"
+    ],
+    [
+     "Dirección",
+     "725 5th Ave, entre las calles 56 y 57",
+     "entrada principal por la 5th Ave, junto a Tiffany"
+    ],
+    [
+     "Desde el hotel",
+     "A pie 15 min",
+     "o metro E de 50 St a 5 Av–53 St, ~10 min más 5 a pie"
+    ],
+    [
+     "Precio",
+     "Gratis",
+     "sin entrada ni reserva"
+    ],
+    [
+     "Seguridad",
+     "Control a la entrada",
+     "se revisan bolsos y mochilas; mejor no llevar bultos grandes"
+    ],
+    [
+     "Contacto",
+     "<a href=\"tel:+12127157290\">+1 212 715 7290</a>",
+     "trumptowerny.com"
+    ]
+   ],
+   "secciones": [
+    {
+     "titulo": "Qué ver",
+     "tipo": "route",
+     "items": [
+      "<b>Atrio y cascada</b> — mármol rosa, latón y espejos; el agua cae por toda una pared",
+      "<b>Escaleras mecánicas y balcones</b> — suben por el atrio hasta las plantas abiertas al público, con vistas hacia abajo",
+      "<b>Tienda de recuerdos y cafés</b> — productos de la marca Trump; Starbucks en la segunda planta; restaurante y cafetería en el atrio",
+      "<b>Terraza pública</b> — pequeña y de temporada, en las plantas altas del podio; confirmar que esté abierta en enero"
+     ]
+    }
+   ],
+   "aviso": [
+    "<b>Control de seguridad</b> a la entrada: se revisan bolsos y mochilas y hay vigilancia visible; puede haber cola.",
+    "<b>Solo el atrio y los comercios:</b> las plantas de oficinas y de viviendas son privadas.",
+    "<b>Restaurante con horario corto:</b> el Trump Grill abre solo a mediodía; confirmar el horario en trumptowerny.com.",
+    "<b>1 de enero:</b> según la web oficial el atrio abre todos los días, pero algunas tiendas y restaurantes pueden estar cerrados.",
+    "<b>Navidad:</b> en otros años el atrio se decora con árboles (ver foto); confirmar la decoración de 2026-27."
+   ],
+   "reserva": {
+    "tipo": "no",
+    "dias": null,
+    "efectiva": null,
+    "nota": "Entrada libre, sin reserva",
+    "enlaces": [
+     [
+      "Web oficial: horario, tiendas y restaurantes",
+      "https://www.trumptowerny.com/"
+     ]
+    ]
+   },
+   "valoraciones": {
+    "fuente": "Tripadvisor",
+    "nota": 3.7,
+    "num": 1243,
+    "pos": [
+     "El atrio con la cascada y los mármoles: llamativo y fotogénico",
+     "Entrada gratuita y fácil de combinar con la 5th Avenue y Central Park",
+     "Personal amable; café, helados y tienda de recuerdos"
+    ],
+    "neg": [
+     "Hay poco que hacer: es una parada de 10–30 minutos",
+     "Decoración muy recargada (dorados y mármol rosa) que no a todos les gusta",
+     "Precios altos en el bar y las tiendas, y el restaurante cierra pronto"
+    ]
+   },
+   "combina": [
+    7,
+    27,
+    57,
+    23
+   ],
+   "excluye": [],
+   "excluye_nota": "",
+   "ubicacion": {
+    "nombre": "Trump Tower",
+    "direccion": "725 5th Ave, New York, NY 10022",
+    "lat": 40.762585,
+    "lng": -73.9741
+   },
+   "fotos": {
+    "hero": "f82_hero",
+    "alt": "La base de la torre en la 5th Avenue, con el letrero Trump Tower",
+    "gal": [
+     [
+      "f82_g1",
+      "El atrio, con las escaleras mecánicas y el Starbucks de la segunda planta"
+     ],
+     [
+      "f82_g2",
+      "El árbol de Navidad frente a la pared de la cascada (diciembre de 2010)"
+     ]
+    ]
+   },
+   "fuentes": [
+    "trumptowerny.com (horario)",
+    "Tripadvisor (valoraciones, 1.243 reseñas)",
+    "Wikipedia (atrio)"
+   ]
   }
  ]
 }

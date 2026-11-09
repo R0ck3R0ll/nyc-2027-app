@@ -20,7 +20,7 @@ D = range(1, 8)
 # Familia A: Carlo, María, Martina · Familia B: Santi, Pilar, Irene, Salva (actualizado 09/11/2026).
 IMP = {
     "A": [1, 3, 6, 7, 8, 9, 11, 13, 18, 19, 23, 25, 26, 27, 29, 48, 50, 73, 81],
-    "B": [3, 4, 6, 7, 8, 17, 19, 21, 23, 80],
+    "B": [3, 4, 6, 7, 8, 17, 19, 21, 23, 80, 82],
 }
 
 def ov(h, over):
@@ -152,4 +152,6 @@ META = {
              notas={3: "Salas históricas gratis de 15:00 a 17:00 (sin exposiciones)", 5: "Salas históricas gratis de 15:00 a 17:00 (sin exposiciones)"}),
     81: dict(dur=50, h="08:00-23:00",
              notas={1: "El 1 de enero el horario puede ser distinto; confirmar"}),
+    82: dict(dur=30, h="08:00-22:00",
+             notas={1: "1 de enero: el atrio abre según la web oficial; tiendas y restaurantes pueden cerrar"}),
 }
