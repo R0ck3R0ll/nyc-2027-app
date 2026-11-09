@@ -68,6 +68,11 @@
     list.forEach(function (f) { BYNUM[f.num] = f; });
   }
   function ficha(n) { return BYNUM[n]; }
+  // ¿Es imprescindible para esa familia ('A' o 'B')? Con 'all' o sin familia, para cualquiera de las dos.
+  function isImp(f, fam) {
+    var imp = f && f.imp || '';
+    return fam === 'A' || fam === 'B' ? imp.indexOf(fam) >= 0 : imp !== '';
+  }
 
   function locOf(x) {
     if (!x) return TRIP.hotel;
@@ -277,7 +282,7 @@
   }
 
   /* ---------- sugerencias ---------- */
-  function generate(tema, nivel, day, blocks, fam) {
+  function generate(tema, nivel, day, blocks, fam, vista) {
     var stops = tema.niveles[nivel] || [];
     var obst = lineBlocks(blocks, day, fam);
     var st = placeState(blocks, fam);
@@ -363,7 +368,7 @@
       }
     });
     var nuevos = out.filter(function (x) { return x.n != null; });
-    var imp = nuevos.filter(function (x) { return BYNUM[x.n].clas === 'I'; }).length;
+    var imp = nuevos.filter(function (x) { return isImp(BYNUM[x.n], vista || fam); }).length;
     return {
       tema: tema, nivel: nivel, day: day, stops: out, dropped: dropped,
       start: out.length ? out[0].start : null, end: out.length ? out[out.length - 1].end : null,
@@ -371,14 +376,14 @@
     };
   }
 
-  function suggestionsFor(day, nivel, blocks, fam, temas) {
+  function suggestionsFor(day, nivel, blocks, fam, temas, vista) {
     temas = temas || root.SUGERENCIAS || [];
     var d = TRIP.dias[day - 1];
     var medio = d.tipo === 'llegada' || d.tipo === 'salida';
     return temas.filter(function (t) {
       var dias = t.dias || [2, 3, 4, 5, 6];
       return dias.indexOf(day) >= 0 && (!!t.medio === medio);
-    }).map(function (t) { return generate(t, nivel, day, blocks, fam); })
+    }).map(function (t) { return generate(t, nivel, day, blocks, fam, vista); })
       .filter(function (g) { return g.stops.some(function (s) { return s.n != null; }); })
       .sort(function (a, b) { return b.score - a.score; });
   }
@@ -413,7 +418,7 @@
       if (!cabe && s + Math.min(dur, 45) + back > limit) return;
       res.push({ n: f.num, start: s, end: end, tr: tr, cabe: cabe, meal: mealNow(f, s) });
     });
-    res.sort(function (a, b) { return a.tr.min - b.tr.min || (BYNUM[a.n].clas === 'I' ? -1 : 1); });
+    res.sort(function (a, b) { return a.tr.min - b.tr.min || (isImp(BYNUM[a.n], fam) ? -1 : 1); });
     return { next: next, limit: limit, opciones: res };
   }
   function mealNow(f, t) {
@@ -456,7 +461,7 @@
     TRIP: TRIP, nameKey: nameKey, persona: persona, toMin: toMin, fmt: fmt, durTxt: durTxt, roundUp: roundUp,
     setFichas: setFichas, ficha: ficha, locOf: locOf, km: km, travel: travel,
     hoursOn: hoursOn, hoursTxt: hoursTxt, funciones: funciones, notaDia: notaDia, fitsHours: fitsHours,
-    covers: covers, blockStart: blockStart, blockEnd: blockEnd, blockDur: blockDur, blockTitle: blockTitle,
+    isImp: isImp, covers: covers, blockStart: blockStart, blockEnd: blockEnd, blockDur: blockDur, blockTitle: blockTitle,
     sortBlocks: sortBlocks, lineBlocks: lineBlocks, placeState: placeState, analyzeDay: analyzeDay,
     suggestStart: suggestStart, generate: generate, suggestionsFor: suggestionsFor,
     nowOptions: nowOptions, mealNow: mealNow, nyNow: nyNow,

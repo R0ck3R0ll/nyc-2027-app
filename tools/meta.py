@@ -16,6 +16,13 @@ Días del viaje: 1 vie 1 ene · 2 sáb · 3 dom · 4 lun · 5 mar · 6 mié · 7
 
 D = range(1, 8)
 
+# Imprescindibles de cada familia (números de ficha). Sustituyen a la antigua clasificación I/B.
+# Familia A: Carlo, María, Martina · Familia B: Santi, Pilar, Irene, Salva (actualizado 09/11/2026).
+IMP = {
+    "A": [1, 3, 6, 7, 8, 9, 11, 13, 18, 19, 23, 25, 26, 27, 29, 48, 50, 73, 81],
+    "B": [3, 4, 6, 7, 8, 17, 19, 21, 23, 80],
+}
+
 def ov(h, over):
     r = {d: h for d in D}
     r.update(over)

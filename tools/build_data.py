@@ -5,7 +5,7 @@
 Entradas: tools/Fase3_Fichas_datos_NYC.json, tools/meta.py, tools/fotos_src/ (jpg + meta.json)
 """
 import json, pathlib, sys
-from meta import META
+from meta import META, IMP
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TOOLS = ROOT / "tools"
@@ -38,6 +38,9 @@ def main(fotos=False):
         if "notas" in m:
             plan["notas"] = {str(k): v for k, v in m["notas"].items()}
         f["plan"] = plan
+        # familias para las que la ficha es imprescindible ("A", "B", "AB" o ""); sustituye a «clas»
+        imp = "".join(k for k in "AB" if f["num"] in IMP[k])
+        f = {("imp" if k == "clas" else k): (imp if k == "clas" else v) for k, v in f.items()}
         fot = f.get("fotos") or {}
         keys = [fot.get("hero")] + [g[0] for g in fot.get("gal", [])]
         f["creditos"] = {k: {"autor": credits[k]["autor"], "licencia": credits[k]["licencia"],

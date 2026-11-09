@@ -425,7 +425,7 @@
     html += '<main>' + dayChips(day, 'data-day');
     html += '<div class="seg" id="lv">' + window.NIVELES.map(function (n) { return '<button data-lv="' + n.id + '" class="' + (lv === n.id ? 'on' : '') + '">' + n.nombre + '</button>'; }).join('') + '</div>';
     html += '<label class="toggle"><input type="checkbox" id="sugMine" ' + (S.ui.sugMine ? 'checked' : '') + '> Solo para mi familia (incluye lo que ha visto la otra familia)</label>';
-    var sugs = C.suggestionsFor(day, lv, ST.blocks(), aud, window.SUGERENCIAS);
+    var sugs = C.suggestionsFor(day, lv, ST.blocks(), aud, window.SUGERENCIAS, myFam());
     var existing = C.lineBlocks(ST.blocks(), day, aud).filter(function (b) { return b.type !== 'fixed'; });
     html += '<p class="small muted" style="margin:6px 0 4px">' + d.largo + (d.tipo === 'llegada' ? ' · llegada al hotel hacia las 21:00' : d.tipo === 'salida' ? ' · check-out a las 12:00 y salida al aeropuerto a las 18:00' : ' · de 9:00 a 23:00') +
       (existing.length ? ' · se respetan los ' + existing.length + ' bloques ya programados' : '') + '</p>';
@@ -435,7 +435,7 @@
       html += '<div class="card scard"><h3>' + esc(g.tema.titulo) + '</h3><div class="sz">' + esc(g.tema.zona) + ' · ' + C.fmt(g.start) + '–' + C.fmt(g.end) + '</div><p class="sr">' + esc(g.tema.resumen) + '</p><ul class="stops">' +
         g.stops.map(function (s) {
           var f = s.n != null ? C.ficha(s.n) : null;
-          return '<li><span class="st">' + C.fmt(s.start) + '</span><span class="sn">' + (f ? bullet(f) + '<a href="#" data-ficha="' + f.num + '">' + esc(f.nombre) + '</a>' + (f.clas === 'I' ? ' <span class="badge I">I</span>' : '') : '<b>' + esc(s.titulo) + '</b>') +
+          return '<li><span class="st">' + C.fmt(s.start) + '</span><span class="sn">' + (f ? bullet(f) + '<a href="#" data-ficha="' + f.num + '">' + esc(f.nombre) + '</a>' + (C.isImp(f, myFam()) ? ' <span class="badge I">I</span>' : '') : '<b>' + esc(s.titulo) + '</b>') +
             '<small>' + (s.nota ? esc(s.nota) + ' · ' : '') + C.durTxt(s.dur) + (s.tr && s.tr.min ? ' · ' + modeTxt(s.tr) : '') + (s.sustituye ? ' · en lugar de ' + esc(C.ficha(s.sustituye).nombre) : '') + '</small></span></li>';
         }).join('') + '</ul>' +
         (g.dropped.length ? '<div class="dropped">Sin: ' + g.dropped.map(function (x) { return esc(C.ficha(x.n).nombre) + ' (' + esc(x.why) + ')'; }).join(' · ') + '</div>' : '') +
@@ -477,7 +477,7 @@
       '<select id="dia"><option value="">Cualquier día</option>' + DIAS.map(function (d) { return '<option value="' + d.n + '"' + (String(b.dia) === String(d.n) ? ' selected' : '') + '>Abierto el ' + d.corto + '</option>'; }).join('') + '</select></div>';
     var q = b.q.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     var res = F.filter(function (f) {
-      if (b.clas && f.clas !== b.clas) return false;
+      if (b.clas && (C.isImp(f, fam) ? 'I' : 'B') !== b.clas) return false;
       if (b.cat && f.categoria !== b.cat) return false;
       var e = st[f.num] ? st[f.num].estado : 'libre';
       if (b.estado && e !== b.estado) return false;
@@ -508,7 +508,7 @@
   }
   function placeCard(f, s, extra) {
     return '<div class="card pcard" data-ficha="' + f.num + '"><img loading="lazy" src="' + thumb(f) + '" alt=""><div class="pi"><div class="pn">' + bullet(f) + '<span>' + esc(f.nombre) + '</span></div>' +
-      '<div class="pz">' + esc(f.categoria) + ' · ' + esc(f.zona) + '</div><div class="pt">' + (f.clas === 'I' ? '<span class="badge I">Imprescindible</span>' : '') + stateBadge(s) +
+      '<div class="pz">' + esc(f.categoria) + ' · ' + esc(f.zona) + '</div><div class="pt">' + (C.isImp(f, myFam()) ? '<span class="badge I">Imprescindible</span>' : '') + stateBadge(s) +
       f.tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div>' + (extra || '') + '</div></div>';
   }
 
@@ -524,7 +524,7 @@
       var c = cr[f.fotos.hero];
       h += '<div class="hero"><img src="' + img(f.fotos.hero) + '" alt="' + esc(f.fotos.alt || '') + '">' + (c ? '<span class="cr">© ' + esc(c.autor) + ' · ' + esc(c.licencia) + '</span>' : '') + '</div>';
     }
-    h += '<div class="kicker">' + bullet(f) + esc(f.categoria) + ' · ' + esc(f.zona) + (f.clas === 'I' ? ' <span class="badge I">Imprescindible</span>' : '') + '</div>';
+    h += '<div class="kicker">' + bullet(f) + esc(f.categoria) + ' · ' + esc(f.zona) + (C.isImp(f, fam) ? ' <span class="badge I">Imprescindible</span>' : '') + '</div>';
     h += '<div class="fttl">' + esc(f.nombre) + '</div><p class="fsub">' + esc(f.subtitulo) + '</p>';
     h += '<div class="tags">' + f.tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div>';
     // estado en el programa
@@ -707,7 +707,7 @@
     var opts = res.opciones.filter(function (o) {
       if (filt === 'comer') return !!o.meal;
       if (filt === 'cerca') return o.tr.min <= 15;
-      if (filt === 'I') return C.ficha(o.n).clas === 'I';
+      if (filt === 'I') return C.isImp(C.ficha(o.n), fam);
       return true;
     });
     var html = header('Ahora', live ? 'Hora de Nueva York' : 'Simulación (el viaje aún no ha empezado)');

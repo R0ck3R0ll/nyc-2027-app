@@ -9,7 +9,7 @@ Funciona sin conexión y sincroniza el programa entre todos los móviles con Fir
 |---|---|
 | Programa | Días 1–7, vacíos hasta confirmar una sugerencia o añadir lugares. Avisos de tiempos, horarios, excluyentes y reservas; carga del día; «Ir» y «Ruta del día» abren Google Maps |
 | Sugerencias | Itinerarios de día completo (días 2–6) y de medio día (1 y 7) en tres niveles; quitan lo ya visitado o programado y respetan lo que ya hay en el día |
-| Lugares | Banco de las 81 fichas con filtros (clasificación, estado, categoría, abierto tal día) |
+| Lugares | Banco de las 81 fichas con filtros (imprescindibles de tu familia / otras opciones, estado, categoría, abierto tal día) |
 | Ahora | Qué se puede hacer desde donde estáis con el tiempo libre hasta el siguiente compromiso |
 | Viaje | Hotel, vuelos, reservas del programa, grupo e invitación, fotos sin conexión |
 
@@ -17,6 +17,10 @@ Funciona sin conexión y sincroniza el programa entre todos los móviles con Fir
 
 Cada bloque del programa es para **Todos**, **Familia A** o **Familia B**. Cada móvil se configura con nombre y familia.
 Un lugar visitado cuenta como hecho solo para quien lo tenía asignado.
+
+## Imprescindibles
+
+Cada familia tiene su propia lista (`IMP` en `tools/meta.py`); cada móvil ve marcados los de su familia. El dato `imp` de cada ficha (`A`, `B`, `AB` o vacío) se genera con `tools/build_data.py`.
 
 ## Estructura
 
