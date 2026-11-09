@@ -1,9 +1,9 @@
 /* Service worker: la app funciona sin conexión.
    - Estructura de la app (HTML, JS, CSS, datos): primero la red, si no hay, la copia guardada.
    - Fotos y librerías de Firebase: primero la copia guardada. */
-const VERSION = 'nyc27-v12';
+const VERSION = 'nyc27-v13';
 const SHELL = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'js/config.js', 'js/core.js', 'js/store.js',
-  'js/app.js', 'js/sync.js', 'js/sugerencias.js', 'data/fichas.js', 'icons/icon-192.png'];
+  'js/app.js', 'js/sync.js', 'js/sugerencias.js', 'js/planes.js', 'data/fichas.js', 'icons/icon-192.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

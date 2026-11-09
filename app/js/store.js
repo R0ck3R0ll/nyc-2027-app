@@ -28,7 +28,7 @@
     notifs: saved.notifs || [],         // avisos de cambios (los últimos)
     shared: saved.shared || null,       // checklist común de Carlo y María { items: [...] }
     mycheck: saved.mycheck || { on: false, items: [] },   // checklist personal (solo en este móvil)
-    ui: Object.assign({ view: 'programa', day: null, showOther: false, nivel: 'equilibrado', sugMine: false, ack: {}, ackBefore: 0,
+    ui: Object.assign({ view: 'programa', day: null, showOther: false, nivel: 'equilibrado', sugMine: false, sugTab: 'planes', ack: {}, ackBefore: 0,
                         banco: { q: '', cat: '', clas: '', estado: '', dia: '' } }, saved.ui || {}),
     sync: { status: 'off', error: '' }
   };
@@ -82,12 +82,14 @@
   }
   function changeTxt(a, b) {
     var ch = [];
+    var sust = a.n != null && b.n != null && a.n !== b.n;
+    if (sust) ch.push('sustituido por «' + C().blockTitle(b) + '»');
     if (a.day !== b.day) ch.push('pasa al ' + C().TRIP.dias[b.day - 1].corto);
     if (a.start !== b.start) ch.push('hora ' + a.start + ' → ' + b.start);
     if (C().blockDur(a) !== C().blockDur(b)) ch.push('duración ' + C().durTxt(C().blockDur(b)));
     if ((a.status || 'plan') !== (b.status || 'plan')) ch.push(b.status === 'done' ? 'hecho' : 'vuelve a pendiente');
     if (!!(a.booking && a.booking.ok) !== !!(b.booking && b.booking.ok) || (a.booking && b.booking && a.booking.info !== b.booking.info)) ch.push(b.booking && b.booking.ok ? 'reservado' + (b.booking.info ? ': ' + b.booking.info : '') : 'reserva anulada');
-    if ((a.note || '') !== (b.note || '')) ch.push('nota: ' + (b.note || '—'));
+    if (!sust && (a.note || '') !== (b.note || '')) ch.push('nota: ' + (b.note || '—'));
     if ((a.title || '') !== (b.title || '') && b.title) ch.push('ahora «' + b.title + '»');
     return ch.join(' · ');
   }

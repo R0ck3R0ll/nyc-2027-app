@@ -355,7 +355,8 @@
         if (ok) {
           placed = { n: n, libre: sp.libre || null, titulo: sp.titulo || null, start: s, dur: dur, end: s + dur,
             tr: travel(from, item),
-            nota: sp.nota || '', sustituye: c > 0 ? sp.n : null };
+            nota: sp.nota || '', sustituye: c > 0 ? sp.n : null,
+            cands: sp.libre ? [] : [sp.n].concat(sp.alt || []) };
         }
       }
       if (placed) {

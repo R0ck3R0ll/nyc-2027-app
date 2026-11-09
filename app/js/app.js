@@ -347,6 +347,12 @@
     return html;
   }
 
+  // Alternativas para sustituir una parada cargada de un plan o una sugerencia: las que no están ya hechas o programadas
+  function subsFor(b) {
+    var st = C.placeState(ST.blocks(), myFam());
+    return (b.alt || []).filter(function (x) { return C.ficha(x) && !st[x]; });
+  }
+
   /* editor de bloque */
   function editBlock(id) {
     var b = S.blocks[id];
@@ -376,6 +382,8 @@
       html += '<label class="toggle" style="margin-top:14px"><input type="checkbox" id="eb-ok" ' + (bk.ok ? 'checked' : '') + '> Reservado</label>' +
         '<input type="text" id="eb-info" placeholder="Datos de la reserva: hora, localizador, butacas…" value="' + esc(bk.info || '') + '">';
     }
+    var subs = f ? subsFor(b) : [];
+    if (subs.length) html += '<label class="f">Sustituir por</label><div class="fchips" id="eb-subs">' + subs.map(function (x) { var g = C.ficha(x); return '<button class="chip" data-sub="' + x + '">' + bullet(g) + esc(g.nombre) + '</button>'; }).join('') + '</div>';
     html += '<label class="f">Nota</label><textarea id="eb-note" placeholder="Opcional">' + esc(b.note || '') + '</textarea>';
     html += '<div class="actionbar"><button class="btn ghost" id="eb-del" style="color:var(--err)">Quitar del programa</button><button class="btn yellow" id="eb-save">Guardar</button></div>';
     openSheet(f ? 'Bloque del programa' : 'Bloque', html, function (el) {
@@ -394,6 +402,16 @@
         if (b.who === 'all') setTimeout(function () { askScope('¿Este cambio es para todo el grupo o solo para tu familia?', function (sc) { ST.updateBlock(b, nb, sc); toast('Guardado'); }); }, 30);
         else { ST.updateBlock(b, nb, 'all'); toast('Guardado'); }
       };
+      el.querySelectorAll('[data-sub]').forEach(function (x) {
+        x.onclick = function () {
+          var n = +x.dataset.sub, g = C.ficha(n);
+          var nb = Object.assign({}, b, { n: n, dur: g.plan.dur, note: '', booking: null,
+            alt: [b.n].concat((b.alt || []).filter(function (y) { return y !== n; })) });
+          closeSheet();
+          if (b.who === 'all') setTimeout(function () { askScope('¿Sustituir por «' + g.nombre + '» para todo el grupo o solo para tu familia?', function (sc) { ST.updateBlock(b, nb, sc); toast('Sustituido por ' + g.nombre); }); }, 30);
+          else { ST.updateBlock(b, nb, 'all'); toast('Sustituido por ' + g.nombre); }
+        };
+      });
       $('#eb-del', el).onclick = function () {
         closeSheet();
         if (b.who === 'all') setTimeout(function () { askScope('¿Quitarlo para todo el grupo o solo para tu familia?', function (sc) { ST.removeBlock(b, sc); toast('Quitado del programa'); }); }, 30);
@@ -416,13 +434,42 @@
   }
 
   /* ---------- SUGERENCIAS ---------- */
+  var SUG_TABS = [['planes', 'Planes conjuntos'], ['sug', 'Sugerencias'], ['familia', 'Planes de familia']];
+  function sugTabs(tab) {
+    return '<div class="seg" style="margin-bottom:10px">' + SUG_TABS.map(function (x) { return '<button data-sugtab="' + x[0] + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>';
+  }
+  function bindSugTabs() {
+    document.querySelectorAll('[data-sugtab]').forEach(function (b) { b.onclick = function () { ST.setUi({ sugTab: b.dataset.sugtab }); }; });
+  }
+  // Paradas de una propuesta → bloques del programa (guardan las alternativas para poder sustituir)
+  function stopsToBlocks(stops, day, origen) {
+    return stops.map(function (s) {
+      if (s.n == null) return { day: day, start: C.fmt(s.start), dur: s.dur, status: 'plan', type: 'free', title: s.titulo, place: s.libre === 'descanso' ? 'hotel' : s.libre === 'musical' ? 'teatros' : null };
+      var alts = (s.cands || []).filter(function (x) { return x !== s.n; });
+      var b = { day: day, n: s.n, start: C.fmt(s.start), dur: s.dur, status: 'plan', type: 'place', note: s.nota || '' };
+      if (alts.length) b.alt = alts;
+      if (origen) b.origen = origen;
+      return b;
+    });
+  }
+  function stopsHtml(g) {
+    return '<ul class="stops">' + g.stops.map(function (s) {
+      var f = s.n != null ? C.ficha(s.n) : null;
+      return '<li><span class="st">' + C.fmt(s.start) + '</span><span class="sn">' + (f ? bullet(f) + '<a href="#" data-ficha="' + f.num + '">' + esc(f.nombre) + '</a>' + (C.isImp(f, myFam()) ? ' <span class="badge I">I</span>' : '') : '<b>' + esc(s.titulo) + '</b>') +
+        '<small>' + (s.nota ? esc(s.nota) + ' · ' : '') + C.durTxt(s.dur) + (s.tr && s.tr.min ? ' · ' + modeTxt(s.tr) : '') + (s.sustituye ? ' · en lugar de ' + esc(C.ficha(s.sustituye).nombre) : '') + '</small></span></li>';
+    }).join('') + '</ul>' +
+      (g.dropped.length ? '<div class="dropped">Sin: ' + g.dropped.map(function (x) { return esc(C.ficha(x.n).nombre) + ' (' + esc(x.why) + ')'; }).join(' · ') + '</div>' : '');
+  }
   function renderSug() {
+    var tab = S.ui.sugTab || 'planes';
+    if (tab === 'planes') return renderPlanes();
+    if (tab === 'familia') return renderPlanesFamilia();
     var day = curDay();
     var aud = S.ui.sugMine ? myFam() : 'all';
     var lv = S.ui.nivel;
     var d = DIAS[day - 1];
     var html = header('Sugerencias', 'Itinerarios que evitan lo ya visto');
-    html += '<main>' + dayChips(day, 'data-day');
+    html += '<main>' + sugTabs(tab) + dayChips(day, 'data-day');
     html += '<div class="seg" id="lv">' + window.NIVELES.map(function (n) { return '<button data-lv="' + n.id + '" class="' + (lv === n.id ? 'on' : '') + '">' + n.nombre + '</button>'; }).join('') + '</div>';
     html += '<label class="toggle"><input type="checkbox" id="sugMine" ' + (S.ui.sugMine ? 'checked' : '') + '> Solo para mi familia (incluye lo que ha visto la otra familia)</label>';
     var sugs = C.suggestionsFor(day, lv, ST.blocks(), aud, window.SUGERENCIAS, myFam());
@@ -432,27 +479,18 @@
     if (!sugs.length) html += '<div class="card empty"><div class="big">Sin sugerencias</div>Todo lo que proponíamos para este día ya está visto o programado. Prueba con otro nivel o elige en el banco.</div>';
     html += '<div class="list">';
     sugs.forEach(function (g, i) {
-      html += '<div class="card scard"><h3>' + esc(g.tema.titulo) + '</h3><div class="sz">' + esc(g.tema.zona) + ' · ' + C.fmt(g.start) + '–' + C.fmt(g.end) + '</div><p class="sr">' + esc(g.tema.resumen) + '</p><ul class="stops">' +
-        g.stops.map(function (s) {
-          var f = s.n != null ? C.ficha(s.n) : null;
-          return '<li><span class="st">' + C.fmt(s.start) + '</span><span class="sn">' + (f ? bullet(f) + '<a href="#" data-ficha="' + f.num + '">' + esc(f.nombre) + '</a>' + (C.isImp(f, myFam()) ? ' <span class="badge I">I</span>' : '') : '<b>' + esc(s.titulo) + '</b>') +
-            '<small>' + (s.nota ? esc(s.nota) + ' · ' : '') + C.durTxt(s.dur) + (s.tr && s.tr.min ? ' · ' + modeTxt(s.tr) : '') + (s.sustituye ? ' · en lugar de ' + esc(C.ficha(s.sustituye).nombre) : '') + '</small></span></li>';
-        }).join('') + '</ul>' +
-        (g.dropped.length ? '<div class="dropped">Sin: ' + g.dropped.map(function (x) { return esc(C.ficha(x.n).nombre) + ' (' + esc(x.why) + ')'; }).join(' · ') + '</div>' : '') +
+      html += '<div class="card scard"><h3>' + esc(g.tema.titulo) + '</h3><div class="sz">' + esc(g.tema.zona) + ' · ' + C.fmt(g.start) + '–' + C.fmt(g.end) + '</div><p class="sr">' + esc(g.tema.resumen) + '</p>' + stopsHtml(g) +
         '<div style="margin-top:12px"><button class="btn yellow full" data-confirm="' + i + '">' + I.check + ' Confirmar para el ' + d.corto + '</button></div></div>';
     });
     html += '</div></main>';
     $('#app').innerHTML = html;
+    bindSugTabs();
     document.querySelectorAll('[data-lv]').forEach(function (b) { b.onclick = function () { ST.setUi({ nivel: b.dataset.lv }); }; });
     $('#sugMine').onchange = function (e) { ST.setUi({ sugMine: e.target.checked }); };
     document.querySelectorAll('[data-confirm]').forEach(function (b) {
       b.onclick = function () {
         var g = sugs[+b.dataset.confirm];
-        var list = g.stops.map(function (s) {
-          return s.n != null
-            ? { day: day, n: s.n, start: C.fmt(s.start), dur: s.dur, status: 'plan', type: 'place', note: s.nota || '' }
-            : { day: day, start: C.fmt(s.start), dur: s.dur, status: 'plan', type: 'free', title: s.titulo, place: s.libre === 'descanso' ? 'hotel' : s.libre === 'musical' ? 'teatros' : null };
-        });
+        var list = stopsToBlocks(g.stops, day);
         function apply(sc) {
           ST.addBlocks(list, whoFor(sc), 'ha confirmado «' + g.tema.titulo + '» (' + list.length + ' planes)');
           ST.setUi({ view: 'programa', day: day });
@@ -462,6 +500,48 @@
         else askScope('«' + g.tema.titulo + '» el ' + d.corto, apply);
       };
     });
+  }
+
+  /* ---------- PLANES CONJUNTOS ---------- */
+  function renderPlanes() {
+    var day = curDay();
+    var d = DIAS[day - 1];
+    var html = header('Sugerencias', 'Planes para ir las dos familias juntas');
+    html += '<main>' + sugTabs('planes') + dayChips(day, 'data-day');
+    var planes = (window.PLANES || []).filter(function (p) { return p.dia === day; });
+    var existing = C.lineBlocks(ST.blocks(), day, 'all').filter(function (b) { return b.type !== 'fixed'; });
+    html += '<p class="small muted" style="margin:6px 0 4px">' + d.largo + (existing.length ? ' · se respetan los ' + existing.length + ' bloques ya programados' : '') + '</p>';
+    var gens = planes.map(function (p) {
+      return C.generate({ titulo: p.titulo, zona: p.zona, resumen: p.resumen, niveles: { plan: p.paradas } }, 'plan', day, ST.blocks(), 'all', myFam());
+    });
+    if (!planes.length) html += '<div class="card empty"><div class="big">Sin planes conjuntos</div>' + (day === 1 ? 'El día de llegada no tiene planes conjuntos.' : 'Los planes de este día aún no están preparados.') + '</div>';
+    html += '<div class="list">';
+    planes.forEach(function (p, i) {
+      var g = gens[i];
+      var tipo = (window.PLANES_TIPOS || []).filter(function (t) { return t.id === p.tipo; })[0];
+      html += '<div class="card scard"><div class="kicker">' + esc(tipo ? tipo.nombre : '') + '</div><h3>' + esc(p.titulo) + '</h3><div class="sz">' + esc(p.zona) + (g.stops.length ? ' · ' + C.fmt(g.start) + '–' + C.fmt(g.end) : '') + '</div><p class="sr">' + esc(p.resumen) + '</p>' + stopsHtml(g) +
+        (g.stops.length ? '<div style="margin-top:12px"><button class="btn yellow full" data-plan="' + i + '">' + I.check + ' Cargar en el ' + d.corto + '</button></div>' : '') + '</div>';
+    });
+    html += '</div></main>';
+    $('#app').innerHTML = html;
+    bindSugTabs();
+    document.querySelectorAll('[data-plan]').forEach(function (b) {
+      b.onclick = function () {
+        var p = planes[+b.dataset.plan], g = gens[+b.dataset.plan];
+        var list = stopsToBlocks(g.stops, day, p.id);
+        askScope('«' + p.titulo + '» el ' + d.corto, function (sc) {
+          ST.addBlocks(list, whoFor(sc), 'ha cargado el plan «' + p.titulo + '» (' + list.length + ' paradas)');
+          ST.setUi({ view: 'programa', day: day });
+          toast('Cargado en el ' + d.corto + ': ' + list.length + ' paradas');
+        });
+      };
+    });
+  }
+  function renderPlanesFamilia() {
+    var html = header('Sugerencias', 'Planes solo para tu familia');
+    html += '<main>' + sugTabs('familia') + '<div class="card empty"><div class="big">Próximamente</div>Aquí irán los planes de cada familia, con los imprescindibles que no se comparten y los espectáculos.</div></main>';
+    $('#app').innerHTML = html;
+    bindSugTabs();
   }
 
   /* ---------- BANCO ---------- */
