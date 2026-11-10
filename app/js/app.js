@@ -549,7 +549,7 @@
     var b = S.ui.banco;
     var fam = myFam();
     var st = C.placeState(ST.blocks(), fam);
-    var html = header('Lugares', '82 fichas');
+    var html = header('Lugares', '86 fichas');
     html += '<main><div class="search"><input type="search" id="q" placeholder="Buscar: pizza, mirador, Brooklyn…" value="' + esc(b.q) + '"></div>';
     html += '<div class="fchips" style="margin-top:8px">' + ['', 'I', 'B'].map(function (c) { return '<button class="chip ' + (b.clas === c ? 'on' : '') + '" data-clas="' + c + '">' + (c === '' ? 'Todas' : c === 'I' ? 'Imprescindibles' : 'Otras opciones') + '</button>'; }).join('') + '</div>' +
       '<div class="fchips">' + [['', 'Cualquier estado'], ['libre', 'Por hacer'], ['programado', 'Programadas'], ['hecho', 'Hechas']].map(function (x) { return '<button class="chip ' + (b.estado === x[0] ? 'on' : '') + '" data-est="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';

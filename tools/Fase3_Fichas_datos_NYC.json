@@ -1,5 +1,5 @@
 {
- "generado": "2026-10-17",
+ "generado": "2026-11-10",
  "nombres": {
   "1": "Top of the Rock",
   "2": "Empire State Building",
@@ -82,7 +82,11 @@
   "79": "Carmine's",
   "80": "The Morgan Library + Museum",
   "81": "Target Herald Square",
-  "82": "Trump Tower"
+  "82": "Trump Tower",
+  "83": "The Mills at Jersey Gardens",
+  "84": "Empire Outlets",
+  "85": "Century 21 NYC",
+  "86": "Nordstrom Rack"
  },
  "fichas": [
   {
@@ -10183,6 +10187,475 @@
     "trumptowerny.com (horario)",
     "Tripadvisor (valoraciones, 1.243 reseñas)",
     "Wikipedia (atrio)"
+   ]
+  },
+  {
+   "num": 83,
+   "f1": null,
+   "clas": "B",
+   "categoria": "Compras",
+   "zona": "Elizabeth (Nueva Jersey) · cerca del aeropuerto de Newark",
+   "nombre": "The Mills at Jersey Gardens",
+   "subtitulo": "El mayor outlet de Nueva Jersey, a unos 40 minutos en bus de Manhattan: más de 200 tiendas, con la ropa sin impuesto",
+   "tags": [
+    "3–4 h",
+    "Bus ~$7 por trayecto",
+    "Bus 30–45'"
+   ],
+   "que_es": [
+    "Centro comercial y outlet <b>cubierto</b>, en dos plantas, en Elizabeth (Nueva Jersey), junto al aeropuerto de Newark. Tiene más de 200 tiendas: marcas deportivas (Nike Factory Store, Adidas, PUMA, UGG), moda (Levi's, Polo Ralph Lauren Factory, Tommy Hilfiger, H&M, Old Navy, Primark), firmas de diseño (Coach, Tory Burch, Michael Kors) y Bloomingdale's The Outlet Store, además de Sephora, zona de restauración y cine.",
+    "Es la alternativa a Woodbury Common (63) más fácil de encajar: más pequeño, pero se hace en media jornada, no en un día entero. En Nueva Jersey la <b>ropa y el calzado no pagan impuesto de ventas</b>. Para los adolescentes: Nike, Primark, Sephora, Levi's y H&M."
+   ],
+   "practica": [
+    [
+     "Duración",
+     "3–4 h de compras",
+     "más 1–1,5 h de trayecto por sentido"
+    ],
+    [
+     "Horario",
+     "Lun–sáb 10:00–21:00 · dom 11:00–19:00",
+     "festivos: confirmar en simon.com"
+    ],
+    [
+     "Dirección",
+     "651 Kapkowski Rd, Elizabeth, NJ",
+     "junto al aeropuerto de Newark"
+    ],
+    [
+     "Cómo ir",
+     "Bus NJ Transit 111 o 115 desde Port Authority (42nd St y 8th Ave)",
+     "30–45 min; paradas frente a la entrada D (el 111, también junto a Guest Services)"
+    ],
+    [
+     "Desde el hotel",
+     "A pie hasta Port Authority ~8 min + bus",
+     "~1 h puerta a puerta; la vuelta suele tardar más por el tráfico"
+    ],
+    [
+     "Precio bus",
+     "~$7 por trayecto por persona",
+     "→ ~$100 los 7 ida y vuelta; a confirmar en njtransit.com"
+    ],
+    [
+     "Consigna",
+     "No hay taquillas ni consigna",
+     "no se pueden dejar maletas"
+    ],
+    [
+     "Contacto",
+     "<a href=\"tel:+19083545900\">+1 908 354 5900</a>",
+     "simon.com/mall/the-mills-at-jersey-gardens"
+    ]
+   ],
+   "secciones": [
+    {
+     "titulo": "Tiendas que interesan",
+     "tipo": "route",
+     "items": [
+      "<b>Deporte</b> — Nike Factory Store · Adidas · PUMA · UGG",
+      "<b>Moda</b> — Levi's · Polo Ralph Lauren Factory · Tommy Hilfiger · Calvin Klein · H&M · Old Navy · Primark",
+      "<b>Diseño</b> — Coach Outlet · Tory Burch · Michael Kors · kate spade · Bloomingdale's The Outlet Store",
+      "<b>Belleza y hogar</b> — Sephora · Victoria's Secret Outlet · Pottery Barn Outlet"
+     ]
+    }
+   ],
+   "aviso": [
+    "<b>Fin de semana:</b> hay más gente, y el domingo cierra a las 19:00.",
+    "<b>Impuestos:</b> en Nueva Jersey la ropa y el calzado no pagan impuesto de ventas; el resto de artículos, sí.",
+    "<b>Volver con tiempo:</b> a la vuelta hay colas y tráfico; puede añadir unos 30 min."
+   ],
+   "reserva": {
+    "tipo": "no",
+    "dias": null,
+    "efectiva": null,
+    "nota": "Entrada libre · el billete de bus se compra en Port Authority o en la app de NJ Transit",
+    "enlaces": [
+     [
+      "Horarios del bus (NJ Transit)",
+      "https://www.njtransit.com"
+     ],
+     [
+      "Web del centro (Simon)",
+      "https://www.simon.com/mall/the-mills-at-jersey-gardens"
+     ]
+    ]
+   },
+   "valoraciones": {
+    "fuente": "Google",
+    "nota": 4.5,
+    "num": 41000,
+    "pos": [
+     "Muchas marcas y precios más bajos que en Manhattan",
+     "Mucho donde elegir: hay quien pasa allí 6–8 horas"
+    ],
+    "neg": [
+     "Bus lleno y tráfico a la vuelta"
+    ]
+   },
+   "combina": [],
+   "excluye": [],
+   "excluye_nota": "",
+   "ubicacion": {
+    "nombre": "The Mills at Jersey Gardens",
+    "direccion": "651 Kapkowski Rd, Elizabeth, NJ 07201",
+    "lat": 40.6628,
+    "lng": -74.1736
+   },
+   "fotos": {
+    "hero": "f83_hero",
+    "alt": "El atrio del centro comercial con decoración navideña",
+    "gal": [
+     [
+      "f83_g1",
+      "El rótulo de The Mills at Jersey Gardens en el interior"
+     ],
+     [
+      "f83_g2",
+      "Un pasillo con tiendas"
+     ]
+    ]
+   },
+   "fuentes": [
+    "simon.com (horarios, tiendas, transporte)",
+    "loving-newyork.com (tarifa del bus, consigna)",
+    "Mall Gang (valoración Google)"
+   ]
+  },
+  {
+   "num": 84,
+   "f1": null,
+   "clas": "B",
+   "categoria": "Compras",
+   "zona": "Staten Island · junto al ferry",
+   "nombre": "Empire Outlets",
+   "subtitulo": "El único outlet de la ciudad, a cinco minutos a pie de la terminal del Staten Island Ferry y con vistas al skyline",
+   "tags": [
+    "1–1,5 h",
+    "Entrada libre",
+    "Metro + ferry 1 h"
+   ],
+   "que_es": [
+    "Centro al aire libre, de varios niveles con terrazas ajardinadas, en el muelle de St. George (Staten Island), pegado a la terminal del <b>Staten Island Ferry</b>. Es el único outlet dentro de la ciudad de Nueva York, y las terrazas miran al skyline de Manhattan.",
+    "Es pequeño: el directorio actual tiene unas 30 tiendas y restaurantes. Hay Nike Factory Store, Levi's Outlet, H&M, Old Navy Outlet, Gap Factory, Banana Republic Factory, GUESS Factory y U.S. Polo Assn., además de Shake Shack, Nathan's y Starbucks. El ferry es gratuito y pasa frente a la Estatua de la Libertad, así que el trayecto forma parte del plan."
+   ],
+   "practica": [
+    [
+     "Duración",
+     "1–1,5 h",
+     "más el ferry: ~25 min por trayecto"
+    ],
+    [
+     "Horario",
+     "Lun–sáb 10:00–20:00 · dom 11:00–20:00",
+     "horario regular según su web; confirmar festivos"
+    ],
+    [
+     "Dirección",
+     "55 Richmond Terrace, Staten Island",
+     "a pocos pasos de la terminal St. George"
+    ],
+    [
+     "Cómo ir",
+     "Staten Island Ferry desde Whitehall Terminal (Lower Manhattan)",
+     "gratis, 24 h, sale cada 30 min; desde la terminal, menos de 5 min a pie"
+    ],
+    [
+     "Desde el hotel",
+     "Metro R/W hasta Whitehall St–South Ferry + ferry ~25 min + 5 min a pie",
+     "~1 h–1 h 15 min"
+    ],
+    [
+     "Precio",
+     "Entrada libre",
+     "ferry gratuito"
+    ]
+   ],
+   "secciones": [
+    {
+     "titulo": "Tiendas",
+     "tipo": "route",
+     "items": [
+      "<b>Deporte y vaqueros</b> — Nike Factory Store · Levi's Outlet · Lids",
+      "<b>Moda</b> — H&M · Old Navy Outlet · Gap Factory · Banana Republic Factory · GUESS Factory · U.S. Polo Assn. · Rainbow · Mandee Factory",
+      "<b>Para comer</b> — Shake Shack · Nathan's Famous · Starbucks · Wetzel's Pretzels · Häagen-Dazs · Empire Beer Garden"
+     ]
+    }
+   ],
+   "aviso": [
+    "<b>Oferta limitada:</b> Nordstrom Rack, el inquilino principal, cerró en diciembre de 2024 y las reseñas recientes hablan de locales vacíos.",
+    "<b>Impuestos:</b> los precios se marcan sin impuesto (8,875 % en Nueva York); la ropa y el calzado de menos de $110 por prenda están exentos.",
+    "<b>En invierno</b> es al aire libre y junto al agua: abrigo."
+   ],
+   "reserva": {
+    "tipo": "no",
+    "dias": null,
+    "efectiva": null,
+    "nota": "Entrada libre; ferry gratuito, sin reserva",
+    "enlaces": [
+     [
+      "Directorio y horarios (Empire Outlets)",
+      "https://www.empireoutlets.nyc/directory/"
+     ],
+     [
+      "Horarios del Staten Island Ferry",
+      "https://www.siferry.com"
+     ]
+    ]
+   },
+   "valoraciones": {
+    "fuente": "Google",
+    "nota": 4.0,
+    "num": 2100,
+    "pos": [
+     "Vistas del skyline y de la bahía desde las terrazas",
+     "Levi's con buenas ofertas"
+    ],
+    "neg": [
+     "Muchos locales vacíos y poco ambiente",
+     "Poca oferta de tiendas"
+    ]
+   },
+   "combina": [
+    10
+   ],
+   "excluye": [],
+   "excluye_nota": "",
+   "ubicacion": {
+    "nombre": "Empire Outlets",
+    "direccion": "55 Richmond Terrace, Staten Island, NY 10301",
+    "lat": 40.6449,
+    "lng": -74.0747
+   },
+   "fotos": {
+    "hero": "f84_hero",
+    "alt": "La plaza de Empire Outlets junto al ferry, con Manhattan al fondo",
+    "gal": [
+     [
+      "f84_g1",
+      "La terraza junto al agua, con el skyline de Manhattan al fondo"
+     ],
+     [
+      "f84_g2",
+      "Los edificios de H&M y Old Navy Outlet vistos desde la pasarela"
+     ]
+    ]
+   },
+   "fuentes": [
+    "empireoutlets.nyc (directorio, horarios)",
+    "Staten Island Chamber (ferry)",
+    "Commercial Observer (cierre de Nordstrom Rack)",
+    "Mall Gang (valoración Google)"
+   ]
+  },
+  {
+   "num": 85,
+   "f1": null,
+   "clas": "B",
+   "categoria": "Compras",
+   "zona": "Lower Manhattan · Financial District",
+   "nombre": "Century 21 NYC",
+   "subtitulo": "El almacén de descuento más famoso de Nueva York: marcas de diseño al 40–65 % menos, frente al World Trade Center",
+   "tags": [
+    "1–2 h",
+    "Entrada libre",
+    "Metro 25'"
+   ],
+   "que_es": [
+    "Almacén <i>off-price</i> de cuatro plantas en Cortlandt Street, abierto desde 1961. Cerró en 2020 y reabrió en 2023. No es un outlet propiamente dicho: vende marcas de diseño y deportivas con descuentos del <b>40–65 %</b> sobre el precio de tienda, como Gucci, Prada, Nike, Calvin Klein, Missoni o Moose Knuckles. El surtido rota, así que cada visita es distinta.",
+    "Tiene ropa de hombre, mujer y niños, abrigos, calzado, bolsos, gafas de sol y perfumes, y una zona de recuerdos de Nueva York (camisetas, tazas). Está en la acera de enfrente del World Trade Center y del Oculus, por lo que encaja con el Memorial del 11-S y Wall Street."
+   ],
+   "practica": [
+    [
+     "Duración",
+     "1–2 h",
+     "según el tiempo para rebuscar"
+    ],
+    [
+     "Horario",
+     "Lun–sáb 9:00–21:00 · dom 11:00–20:00",
+     "festivos: confirmar en c21stores.com"
+    ],
+    [
+     "Dirección",
+     "22 Cortlandt St, entre Broadway y Church St",
+     "frente al World Trade Center; a una manzana de la estación Fulton St"
+    ],
+    [
+     "Desde el hotel",
+     "Metro R/W desde Times Sq hasta Cortlandt St",
+     "~25 min"
+    ],
+    [
+     "Precio",
+     "Entrada libre",
+     "descuentos del 40–65 % sobre el precio de tienda"
+    ]
+   ],
+   "secciones": [
+    {
+     "titulo": "Qué mirar",
+     "tipo": "route",
+     "items": [
+      "<b>Ropa y abrigos</b> — hombre, mujer y niños; marcas de diseño y deportivas",
+      "<b>Calzado y bolsos</b> — firmas de lujo con descuento",
+      "<b>Recuerdos de Nueva York</b> — camisetas y tazas, en una zona propia"
+     ]
+    }
+   ],
+   "aviso": [
+    "<b>Surtido variable:</b> las marcas cambian de una visita a otra.",
+    "<b>Más pequeño que el de antes de 2020:</b> tras la reapertura ocupa cuatro plantas en lugar de seis.",
+    "<b>Impuestos:</b> los precios se marcan sin impuesto (8,875 % en Nueva York); la ropa y el calzado de menos de $110 por prenda están exentos."
+   ],
+   "reserva": {
+    "tipo": "no",
+    "dias": null,
+    "efectiva": null,
+    "nota": "Entrada libre, sin reserva",
+    "enlaces": [
+     [
+      "Century 21 NYC (horarios)",
+      "https://www.c21stores.com/contact"
+     ]
+    ]
+   },
+   "valoraciones": null,
+   "combina": [
+    13,
+    12,
+    5
+   ],
+   "excluye": [],
+   "excluye_nota": "",
+   "ubicacion": {
+    "nombre": "Century 21 NYC",
+    "direccion": "22 Cortlandt St, New York, NY 10007",
+    "lat": 40.7105,
+    "lng": -74.0105
+   },
+   "fotos": {
+    "hero": "f85_hero",
+    "alt": "La entrada de Century 21 en Cortlandt Street",
+    "gal": [
+     [
+      "f85_g1",
+      "El rótulo de Century 21 en la fachada de Cortlandt Street"
+     ]
+    ]
+   },
+   "fuentes": [
+    "c21stores.com (horarios, marcas)",
+    "New York YIMBY y Untapped New York (reapertura de 2023)"
+   ]
+  },
+  {
+   "num": 86,
+   "f1": null,
+   "clas": "B",
+   "categoria": "Compras",
+   "zona": "Herald Square (calle 31) · Union Square",
+   "nombre": "Nordstrom Rack",
+   "subtitulo": "Marcas de Nordstrom con descuento, en dos tiendas céntricas: la calle 31 con la 6th Ave y Union Square",
+   "tags": [
+    "~1 h",
+    "Entrada libre",
+    "Metro 10–20'"
+   ],
+   "que_es": [
+    "Cadena <i>off-price</i> de los almacenes Nordstrom: ropa, calzado, bolsos y belleza de marca con descuento. En Manhattan hay dos tiendas, con el mismo horario: <b>31st & 6th</b> (865 Avenue of the Americas), que ocupa las tres primeras plantas de un edificio a dos manzanas de Herald Square, y <b>Union Square</b> (60 E 14th St).",
+    "Marcas como Nike, Adidas, Champion, New Balance, Calvin Klein, Marc Jacobs, Madewell, Vince, Birkenstock o Cole Haan. La de la 6th Ave también tiene ropa de niños, equipaje y hogar."
+   ],
+   "practica": [
+    [
+     "Duración",
+     "~1 h",
+     "por tienda"
+    ],
+    [
+     "Horario",
+     "Lun–sáb 10:00–21:00 · dom 11:00–19:00",
+     "las dos tiendas; el 1 de enero abren 10:00–21:00 según su web"
+    ],
+    [
+     "31st & 6th",
+     "865 Avenue of the Americas, esquina con la calle 31",
+     "metro hasta 34 St–Herald Sq, ~10 min desde el hotel, y 3 min a pie"
+    ],
+    [
+     "Union Square",
+     "60 E 14th St, entre Broadway y la 4th Ave",
+     "metro N/Q/R/W hasta 14 St–Union Sq, ~20 min desde el hotel"
+    ],
+    [
+     "Precio",
+     "Entrada libre",
+     "precios de tienda"
+    ],
+    [
+     "Contacto",
+     "<a href=\"tel:+16468615440\">31st & 6th +1 646 861 5440</a>",
+     "<a href=\"tel:+12122202080\">Union Square +1 212 220 2080</a>"
+    ]
+   ],
+   "secciones": [
+    {
+     "titulo": "Las dos tiendas",
+     "tipo": "route",
+     "items": [
+      "<b>31st & 6th</b> — 865 Avenue of the Americas · a 5 min a pie de Macy's (56) y de Target Herald Square (81)",
+      "<b>Union Square</b> — 60 E 14th St · a 5 min a pie de The Strand (58) y de Flight Club (59), en Broadway"
+     ]
+    }
+   ],
+   "aviso": [
+    "<b>Impuestos:</b> los precios se marcan sin impuesto (8,875 % en Nueva York); la ropa y el calzado de menos de $110 por prenda están exentos.",
+    "<b>Surtido variable:</b> cambia de una tienda a otra y de un día a otro."
+   ],
+   "reserva": {
+    "tipo": "no",
+    "dias": null,
+    "efectiva": null,
+    "nota": "Entrada libre, sin reserva",
+    "enlaces": [
+     [
+      "Nordstrom Rack 31st & 6th",
+      "https://stores.nordstromrack.com/us/ny/new-york/865-avenue-of-the-americas"
+     ],
+     [
+      "Nordstrom Rack Union Square",
+      "https://stores.nordstromrack.com/us/ny/new-york/60-e-14th-st"
+     ]
+    ]
+   },
+   "valoraciones": null,
+   "combina": [
+    56,
+    81,
+    58,
+    59
+   ],
+   "excluye": [],
+   "excluye_nota": "",
+   "ubicacion": {
+    "nombre": "Nordstrom Rack 31st & 6th",
+    "direccion": "865 Avenue of the Americas, New York, NY 10001",
+    "lat": 40.7479,
+    "lng": -73.9895
+   },
+   "fotos": {
+    "hero": "f86_hero",
+    "alt": "Nordstrom Rack en la esquina de la calle 31 con la 6th Ave",
+    "gal": [
+     [
+      "f86_g1",
+      "La fachada del edificio de la calle 31, con la tienda en la planta baja"
+     ]
+    ]
+   },
+   "fuentes": [
+    "stores.nordstromrack.com (horarios, direcciones, teléfonos)",
+    "Chain Store Age (tienda de la 6th Ave)"
    ]
   }
  ]
