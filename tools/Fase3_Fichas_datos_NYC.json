@@ -8093,8 +8093,10 @@
     ]
    },
    "combina": [],
-   "excluye": [],
-   "excluye_nota": "",
+   "excluye": [
+    83
+   ],
+   "excluye_nota": "alternativas entre sí: con un outlet de media jornada o día completo basta",
    "ubicacion": {
     "nombre": "Woodbury Common Premium Outlets",
     "direccion": "498 Red Apple Ct, Central Valley, NY 10917",
@@ -10294,8 +10296,10 @@
     ]
    },
    "combina": [],
-   "excluye": [],
-   "excluye_nota": "",
+   "excluye": [
+    63
+   ],
+   "excluye_nota": "alternativas entre sí: con un outlet de media jornada o día completo basta",
    "ubicacion": {
     "nombre": "The Mills at Jersey Gardens",
     "direccion": "651 Kapkowski Rd, Elizabeth, NJ 07201",
